@@ -1,0 +1,20 @@
+---
+title: mRNA dynamic
+author: Lisa Hu, Niek Scholten
+output:
+  pdf_document:
+    includes:
+      before_body: title.sty
+    toc: true
+    toc_depth: 1
+    latex_engine: xelatex
+---
+```{r setup, include = FALSE, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = TRUE)
+```
+
+```{r libaries, message = FALSE, warning = FALSE}
+packages <- c()
+invisible(lapply(packages, library, character.only = T))
+```
