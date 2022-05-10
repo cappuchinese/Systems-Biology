@@ -18,4 +18,12 @@ invisible(lapply(packages, library, character.only = T))
 ```
 
 # Opdracht 1
-1.
+Model: `dR/dt = -rR + m`
+
+* [1] Welke parameters moet je programmeren?
+  - Alle parameters van het rechterlid.
+* [2] Zoek bronnen op internet die uitleggen waar de formule dR/dt = -rR + m vandaan komt.
+  - https://www.math.arizona.edu/~faris/ode.pdf
+  - https://arep.med.harvard.edu/pdf/Chen99.pdf
+* [3] Teken het biologische model en leg de vertaling naar de formule uit.
+  -
