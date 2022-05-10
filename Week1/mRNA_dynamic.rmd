@@ -13,7 +13,7 @@ knitr::opts_chunk$set(cache = TRUE)
 ```
 
 ```{r libaries, message = FALSE, warning = FALSE}
-packages <- c()
+packages <- c("deSolve")
 invisible(lapply(packages, library, character.only = T))
 ```
 
@@ -34,5 +34,36 @@ $$\frac{\Delta R}{\Delta t} = -r * R + m $$
   - ![Biological Model](biological_model.png)
   - Dit model legt uit wat de invloed is van een veranderende transcriptie factor op het uiteindelijk geproduceerde mRNA.
 * [4] Wat is de return waarde van de model functie in R? Waarom return je die en niet R zelf?
-  - De return waarde is $$\frac{\Delta R}{\Delta t}, je returnt deze omdat R niet verandert.
+  - De return waarde is $$\frac{\Delta R}{\Delta t}$$, je returnt deze omdat R niet verandert.
 
+
+```{r}
+## Define model
+volume <- function(t, y, parms){
+  with(as.list(parms),{
+    dY <- -r * y + m
+    return(list(dY))
+  })
+}
+
+## Initial state
+state <- c(Volume = 100)
+
+## Timeframe
+times <- seq(0, 10, by = 0.01)
+
+## Parameters
+params1 <- c(m = 60, r = 0.5)
+params2 <- c(m = 40, r = 0.5)
+params3 <- c(m = 50, r = 0.5)
+
+incr <- ode(times = times, y = state, parms = params1, func = volume, method = "euler")
+decr <- ode(times = times, y = state, parms = params2, func = volume, method = "euler")
+stead <- ode(times = times, y = state, parms = params3, func = volume, method = "euler")
+
+plot(incr, type = "l", main = "Number of mRNA transcripts overtime",
+     ylab = "mRNA transcripts", xlab = "Timepoints", col = "green", ylim = c(80, 120))
+lines(decr, col = "red")
+lines(stead, col = "blue")
+legend("topleft", legend = c("m = 60", "m = 50", "m = 40"), fill = c("green", "blue", "red"))
+```

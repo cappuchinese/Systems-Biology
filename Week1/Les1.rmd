@@ -11,11 +11,6 @@ knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(cache = TRUE)
 ```
 
-```{r libaries, message = FALSE, warning = FALSE}
-packages <- c("deSolve")
-invisible(lapply(packages, library, character.only = T))
-```
-
 # Experiment
 ```{r}
 ## Formule: dY <-  10 - 0.1 * (Y+10)
@@ -49,4 +44,37 @@ while (round(dY, digits = 5) != 0){
   * Uit dY
 
 # Programmeer opdracht
+Voor de volgende opdracht wordt er gebruik gemaakt van deSolve:
+```{r}
+library(deSolve)
+```
+
+Dan hebben we het volgende nodig:
+
+* Parameters en variabelen die betrokken zijn.
+* Vergelijkingen die de verandering/effect beschrijven.
+* Initial state.
+* Tijdframe voor de simulatie
+
+```{r}
+## Create parameters
+parameters <- c(addVolume = 10, pV = 0.1)
+
+## Define model
+volume <- function(t, y, parms){
+  with(as.list(parms),{
+    dY <- addVolume - pV * (y + addVolume)
+    return(list(dY))
+  })
+}
+
+## Initial state
+state <- c(Volume = 0)
+
+## Timeframe
+times <- seq(0, 100, by = 1)
+
+out <- ode(times = times, y = state, parms = parameters, func = volume, method = "euler")
+plot(out)
+```
 
