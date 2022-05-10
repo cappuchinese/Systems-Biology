@@ -26,4 +26,4 @@ Model: `dR/dt = -rR + m`
   - https://www.math.arizona.edu/~faris/ode.pdf
   - https://arep.med.harvard.edu/pdf/Chen99.pdf
 * [3] Teken het biologische model en leg de vertaling naar de formule uit.
-  -
+  - ![Biological Model](biological_model.png)
