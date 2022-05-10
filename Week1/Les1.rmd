@@ -1,0 +1,37 @@
+---
+title: Les1
+author: Lisa Hu, Niek Scholten
+output:
+  pdf_document:
+    number_sections: true
+    latex_engine: xelatex
+---
+```{r setup, include = FALSE, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(cache = TRUE)
+```
+
+```{r libaries, message = FALSE, warning = FALSE}
+packages <- c()
+invisible(lapply(packages, library, character.only = T))
+```
+
+# Experiment
+```{r}
+## Formule: dY <-  10 - 0.1 * (Y+10)
+
+Y <- 0
+V <-  10 - 0.1 * 10
+dY <- 0.1
+dataset <- data.frame(Y, V, dY)
+
+Y <- 1
+while (dY != 0){
+  dY <- 10 - (0.1 * (V+10))
+  V <- V + dY
+  df <- data.frame(Y, V, dY)
+  dataset <- rbind(dataset, df)
+  Y <- Y + 1
+}
+```
+1. Welke

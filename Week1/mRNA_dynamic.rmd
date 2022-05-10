@@ -3,8 +3,6 @@ title: mRNA dynamic
 author: Lisa Hu, Niek Scholten
 output:
   pdf_document:
-    includes:
-      before_body: title.sty
     toc: true
     toc_depth: 1
     latex_engine: xelatex
@@ -18,3 +16,6 @@ knitr::opts_chunk$set(cache = TRUE)
 packages <- c()
 invisible(lapply(packages, library, character.only = T))
 ```
+
+# Opdracht 1
+1.
