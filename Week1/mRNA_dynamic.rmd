@@ -18,7 +18,12 @@ invisible(lapply(packages, library, character.only = T))
 ```
 
 # Opdracht 1
-Model: `dR/dt = -rR + m`
+In deze opdracht gebruiken wij het volgende model:
+$$\frac{\Delta R}{\Delta t} = -r * R + m $$
+
+* r is de mate waarin de transcriptie vervalt.
+* R is de hoeveelheid transcriptie.
+* m is de hoeveelheid transcriptie die per seconde wordt geproduceerd.
 
 * [1] Welke parameters moet je programmeren?
   - Alle parameters van het rechterlid.
@@ -27,3 +32,7 @@ Model: `dR/dt = -rR + m`
   - https://arep.med.harvard.edu/pdf/Chen99.pdf
 * [3] Teken het biologische model en leg de vertaling naar de formule uit.
   - ![Biological Model](biological_model.png)
+  - Dit model legt uit wat de invloed is van een veranderende transcriptie factor op het uiteindelijk geproduceerde mRNA.
+* [4] Wat is de return waarde van de model functie in R? Waarom return je die en niet R zelf?
+  - De return waarde is $$\frac{\Delta R}{\Delta t}, je returnt deze omdat R niet verandert.
+

@@ -12,7 +12,7 @@ knitr::opts_chunk$set(cache = TRUE)
 ```
 
 ```{r libaries, message = FALSE, warning = FALSE}
-packages <- c()
+packages <- c("deSolve")
 invisible(lapply(packages, library, character.only = T))
 ```
 
@@ -26,7 +26,7 @@ dY <- 0.1
 dataset <- data.frame(Y, V, dY)
 
 Y <- 1
-while (dY != 0){
+while (round(dY, digits = 5) != 0){
   dY <- 10 - (0.1 * (V+10))
   V <- V + dY
   df <- data.frame(Y, V, dY)
@@ -34,4 +34,19 @@ while (dY != 0){
   Y <- Y + 1
 }
 ```
-1. Welke
+
+* [1] Welke constanten zitten er in de vergelijking?
+  * De 10 toevoeging is constant.
+* [2] Welke variabele uit de vergelijking veranderd steeds?
+  * De hoeveelheid die eruit gehaald wordt.
+* [3] Wat is de initiele waarde van de variabele uit vraag 2?
+  * 1
+* [4] Wat is het tijdsframe van dit experiment?
+  * Tot t = 137
+* [5] Wanneer is het evenwichts moment?
+  * Het loopt oneindig door (asymptotisch), maar vanaf t = 137 is het verschil zo klein dat het geen significante waarde heeft.
+* [6] Uit welke variabele uit de vergelijking kunnen we dat aflezen?
+  * Uit dY
+
+# Programmeer opdracht
+
