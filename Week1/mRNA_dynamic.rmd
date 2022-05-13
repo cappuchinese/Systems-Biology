@@ -34,7 +34,7 @@ $$\frac{\Delta R}{\Delta t} = -r * R + m $$
   - ![Biological Model](biological_model.png)
   - Dit model legt uit wat de invloed is van een veranderende transcriptie factor op het uiteindelijk geproduceerde mRNA.
 * [4] Wat is de return waarde van de model functie in R? Waarom return je die en niet R zelf?
-  - De return waarde is $$\frac{\Delta R}{\Delta t}$$, je returnt deze omdat R niet verandert.
+  - De return waarde is $$\frac{\Delta R}{\Delta t}$$, je returnt deze omdat dit het verschil is in de waarde van R.
 
 
 ```{r}
