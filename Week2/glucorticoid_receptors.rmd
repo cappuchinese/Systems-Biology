@@ -15,42 +15,41 @@ invisible(lapply(packages, library, character.only = T))
 ```
 
 # Opdracht
-1. Schrijf een korte introductie over corticosteroïden, het gebruik ervan en het werkingsmechanisme.
+### 1. Schrijf een korte introductie over corticosteroïden, het gebruik ervan en het werkingsmechanisme.
 
 > Corticosteroïden zijn hormonen die diverse reacties bij ontstekingen en infecties kunnen onderdrukken. Een voorbeeld is het terugdraaien van histon acetylatie van geactiveerde ontstekingsgenen. Een tekort aan corticosteroïden kan leiden tot reuma of astma.<br>
 > Afhankelijk van de ziekte kan het op verschillende manieren worden gebruikt, vaak via een inhaler of een spuit.<br>
 > Deze steroïden zorgen ervoor dat anti-ontstekingsgenen worden geactiveerd en pro-ontstekingsgenen worden onderdrukt.
 
-2. Beschrijf op basis van het model hoe de interactie verloopt tussen het geneesmiddel en de productie van receptor.
+### 2. Beschrijf op basis van het model hoe de interactie verloopt tussen het geneesmiddel en de productie van receptor.
 
->
+> Het geneesmiddel zorgt voor een verlaagde concentratie aan vrij receptoren.
 
-
-3. Implementeer het model in R, waarbij je er van uit kunt gaan dat de concentratie MPL constant is (een parameter) en gelijk is aan 20 ng/mL. Denk er om dat de eenheid omgerekend moet worden om de vergelijkingen kloppend te maken. Dus 20 ng/ml * 1000 ml/L * 1 mol/ molgewicht g geeft nmol/L.
-
+\newpage
+### 3. Implementeer het model in R, waarbij je er van uit kunt gaan dat de concentratie MPL constant is (een parameter) en gelijk is aan 20 ng/mL. Denk er om dat de eenheid omgerekend moet worden om de vergelijkingen kloppend te maken. Dus 20 ng/ml * 1000 ml/L * 1 mol/ molgewicht g geeft nmol/L.
 ```{r model}
 params <- c(
-        k.s_Rm <- 2.90, # fmol/g liver/h, nulde snelheidsconstante voor GR mRNA synthese
-        IC.50_Rm <- 26.2, # fmol/mg protein, concentratie DR(N) waarbij de aanmaak van receptor mRNA daalt tot 50% van de basis waarde
-        k.on <- 0.00329, # L/nmol/h, tweede orde snelheidsconstante voor vorming van het MPL-receptor complex
-        k.T <- 0.63, # 1/h, eerste orde snelheidsconstante voor translocatie van het MPL-receptor complex naar de nucleus
-        k.re <- 0.57, # 1/h, eerste orde snelheidsconstanten voor ‘recovery’ van de receptor van de celkern naar het cytosol
-        R.f <- 0.49, # fractie vrije receptor die gerecycled wordt
-        k.d_R <- 0.0572, # 1/h eerste orde snelheidsconstante voor afbraak van de receptor
-        k.d_Rm <- 0.612, # eerste orde snelheidsconstante voor GR mRNA afbraak
-        k.s_R <- 3.22, # eerste orde snelheidsconstante voor aanmaak van de receptor
-        D <- 5.34e-5 # nmol/L, als molgewicht[MPL] = 374.471 g/mol
+        k.s_Rm = 2.90, # fmol/g liver/h, nulde snelheidsconstante voor GR mRNA synthese
+        IC.50_Rm = 26.2, # fmol/mg protein, concentratie DR(N) waarbij de aanmaak van receptor mRNA daalt tot 50% van de basis waarde
+        k.on = 0.00329, # L/nmol/h, tweede orde snelheidsconstante voor vorming van het MPL-receptor complex
+        k.T = 0.63, # 1/h, eerste orde snelheidsconstante voor translocatie van het MPL-receptor complex naar de nucleus
+        k.re = 0.57, # 1/h, eerste orde snelheidsconstanten voor ‘recovery’ van de receptor van de celkern naar het cytosol
+        R.f = 0.49, # fractie vrije receptor die gerecycled wordt
+        k.d_R = 0.0572, # 1/h eerste orde snelheidsconstante voor afbraak van de receptor
+        k.d_Rm = 0.612, # eerste orde snelheidsconstante voor GR mRNA afbraak
+        k.s_R = 3.22, # eerste orde snelheidsconstante voor aanmaak van de receptor
+        D = (20 * 1000)/374.471 # nmol/L, als molgewicht[MPL] = 374.471 g/mol
 )
 
 state <- c(
-        R.m0 <- 4.74, # fmol / g liver, basisniveau van de concentratie receptor mRNA
-        R.0 <- 267, # fmol/mg protein, basisniveau van de concentratie vrije receptor
-        DR <- 0, # fmol/mg protein, dichtheid van MPL
-        DRN <- 0 # fmol/mg protein, hoeveelheid van MPL
+        R.m0 = 4.74, # fmol / g liver, basisniveau van de concentratie receptor mRNA
+        R.0 = 267, # fmol/mg protein, basisniveau van de concentratie vrije receptor
+        DR = 0, # fmol/mg protein, dichtheid van MPL
+        DRN = 0 # fmol/mg protein, hoeveelheid van MPL
 )
 
 volume <- function(t, y, parms){
-  with(as.list(parms, y),{
+  with(as.list(c(parms, y)),{
     delta.mRNA_R <- k.s_Rm * (1 - ( DRN / (IC.50_Rm + DRN) ) ) - k.d_Rm * R.m0
     delta.R <- k.s_R * R.m0 + R.f * k.re * DRN - k.on * D * R.0 - k.d_R * R.0
     delta.DR <- k.on * D * R.0 - k.T * DR
@@ -58,34 +57,9 @@ volume <- function(t, y, parms){
     return( list( c(delta.mRNA_R, delta.R, delta.DR, delta.DRN ) ) )
   })
 }
-
-times <- seq(0, 48, by = 1)
-
-out <- ode(times = times, y = state, parms = params, func = volume, method = "euler")
-plot(out)
 ```
-
-```{r}
-D <- 20 * 1000 * (1 / 374.471)
-parameters <- c(Ks_rm = 2.90, ic50_rm = 26.2, Kon = 0.00329, Kt = 0.63, Kre = 0.57, Rf = 49, Kd_R = 0.0572, Kd_Rm = 0.612, Ks_r = 3.22, D = D)
-state <- c(Rmo = 4.74, Ro = 267, DR = 0, DRN = 0)
-times <- seq(0, 48,  by = 1)
-Grd_model <- function(t, y, parms){
-  with(as.list(c(parms, y)),{
-    Rmo.delta <- Ks_rm * (1-(DRN / (ic50_rm + DRN))- Kd_Rm * Rmo)
-    R.delta <- Ks_r *  Rmo + Rf * Kre * DRN - Kon * D * Ro - Kd_R *  Ro
-    DR.delta <- Kon * D * Ro - Kt * DR
-    DRN.delta <- Kt * DR - Kre * DRN
-    x <- list(Rmo.delta, R.delta, DR.delta, DRN.delta)
-    x
-        return(list(c(Rmo.delta, R.delta, DR.delta, DRN.delta)))
-       })
-}
-out2 <- ode(times = times, y = state,   parms = parameters, func = Grd_model, method = "euler")
-plot(out)
-```
-4. Simuleer het model voor een duur van twee dagen. Let op: de snelheidsconstante is per uur, dus de tijdsframe moet hier rekening mee houden
-
+\newpage
+### 4. Simuleer het model voor een duur van twee dagen. Let op: de snelheidsconstante is per uur, dus de tijdsframe moet hier rekening mee houden
 ```{r simulation}
 times <- seq(0, 48, by = 1)
 
@@ -93,4 +67,12 @@ out <- ode(times = times, y = state, parms = params, func = volume, method = "eu
 plot(out)
 ```
 
-5. Beschrijf de resultaten: Wat gebeurt er in de tijd en hoe kun je dit verklaren aan de hand van de interacties tussen de variabelen? Welke veranderingen treden op in (a) de concentratie vrije receptor, (b) de concentratie cytosol MPL-receptor complex, (c) de concentratie geactiveerd MPL-receptor complex, de totale concentratie receptoren en de concentratie receptor mRNA. Bepaal welke variabele het belangrijkst is voor de werking van het geneesmiddel en beschrijf deze in detail.
+### 5. Beschrijf de resultaten: Wat gebeurt er in de tijd en hoe kun je dit verklaren aan de hand van de interacties tussen de variabelen? Welke veranderingen treden op in (a) de concentratie vrije receptor, (b) de concentratie cytosol MPL-receptor complex, (c) de concentratie geactiveerd MPL-receptor complex, de totale concentratie receptoren en de concentratie receptor mRNA. Bepaal welke variabele het belangrijkst is voor de werking van het geneesmiddel en beschrijf deze in detail.
+
+> Aan het begin van de simulatie is er een grote hoeveelheid receptor mRNA te zien.
+> Dit neemt snel af en loopt dan weer op tot ongeveer 30% van de originele waarde.
+> De vrije receptors worden snel omgezet tot cytosol MPL-receptor complexen en daarna tot geactiveerde MPL-receptor complexen.
+> De totale concentratie van receptoren daalt.
+
+> De belangrijkste werkende factor voor het geneesmiddel is de concentratie van de vrije receptor.
+> De complexen worden hierdoor geactiveerd en er is geen nieuwe aanmaak zichtbaar van de vrije receptor.
