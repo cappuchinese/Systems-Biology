@@ -1,5 +1,5 @@
 ---
-title: mRNA dynamic
+title: Detailed Analysis
 author: Lisa Hu, Niek Scholten
 output:
   pdf_document:
@@ -18,7 +18,7 @@ invisible(lapply(packages, library, character.only = T))
 ```
 
 ```{r data-loading}
-data <- read.csv("Week3/MPL.csv", na.strings = "NA")
+data <- read.csv("MPL.csv", na.strings = "NA")
 median_MPL_01 <- median(data$MPL_conc[data$dose==0.1], na.rm=T)
 median_MPL_01
 
