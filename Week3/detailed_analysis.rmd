@@ -1,0 +1,37 @@
+---
+title: mRNA dynamic
+author: Lisa Hu, Niek Scholten
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 1
+    latex_engine: xelatex
+---
+```{r setup, include = FALSE, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = TRUE)
+```
+
+```{r libaries, message = FALSE, warning = FALSE}
+packages <- c("deSolve", "ggplot2")
+invisible(lapply(packages, library, character.only = T))
+```
+
+```{r data-loading}
+data <- read.csv("Week3/MPL.csv", na.strings = "NA")
+median_MPL_01 <- median(data$MPL_conc[data$dose==0.1], na.rm=T)
+median_MPL_01
+
+medians <- aggregate(data[,c("MPL_conc","mRNA","Free_receptor")],list(data$dose,data$time), median, na.rm=T)
+names(medians)[1:2] <- c("dose","time")
+head(medians)
+```
+# Assignment 1
+
+```{r plot}
+
+```
+
+### Why is it best practice to plot the median for the experimental data? Explain in your report.
+The median doesn't change with huge outliers. So the data is more reliable.
+So if there is a significant difference, it will show.
