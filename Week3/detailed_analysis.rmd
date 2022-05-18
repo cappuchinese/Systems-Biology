@@ -18,18 +18,41 @@ invisible(lapply(packages, library, character.only = T))
 ```
 
 ```{r data-loading}
-data <- read.csv("MPL.csv", na.strings = "NA")
+MPL_data <- read.csv("MPL.csv", na.strings = "NA")
 median_MPL_01 <- median(data$MPL_conc[data$dose==0.1], na.rm=T)
 median_MPL_01
 
-medians <- aggregate(data[,c("MPL_conc","mRNA","Free_receptor")],list(data$dose,data$time), median, na.rm=T)
+medians <- aggregate(data[,c("MPL_conc","mRNA","Free_receptor")],
+                     list(data$dose,data$time), median, na.rm=T)
 names(medians)[1:2] <- c("dose","time")
 head(medians)
 ```
 # Assignment 1
 
 ```{r plot}
+ggplot(data = MPL_data, mapping = aes(x = time, y = mRNA)) +
+        geom_point() +
+        geom_line(data = medians, color = "red") +
+        geom_line(data = out_model, color = "black") +
+        xlab("Time") +
+        ylab("mRNA (fmol/g)") +
+        ggtitle("mRNA over time")
 
+ggplot(data = MPL_data, mapping = aes(x = time, y = MPL_conc)) +
+        geom_point() +
+        geom_line(data = medians, color = "red") +
+        geom_line(data = out_model, color = "black") +
+        xlab("Time") +
+        ylab("MPL concentration (fmol/mg)") +
+        ggtitle("MPL concentration over time")
+
+ggplot(data = MPL_data, mapping = aes(x = time, y = Free_receptor)) +
+        geom_point() +
+        geom_line(data = medians, color = "red") +
+        geom_line(data = out_model, color = "black") +
+        xlab("Time") +
+        ylab("Free receptor concentration (fmol/mg)") +
+        ggtitle("Free receptor concentration over time")
 ```
 
 ### Why is it best practice to plot the median for the experimental data? Explain in your report.
