@@ -27,6 +27,43 @@ medians <- aggregate(data[,c("MPL_conc","mRNA","Free_receptor")],
 names(medians)[1:2] <- c("dose","time")
 head(medians)
 ```
+
+```{r model}
+params <- c(
+        k.s_Rm = 2.90, # fmol/g liver/h, nulde snelheidsconstante voor GR mRNA synthese
+        IC.50_Rm = 26.2, # fmol/mg protein, concentratie DR(N) waarbij de aanmaak van receptor mRNA daalt tot 50% van de basis waarde
+        k.on = 0.00329, # L/nmol/h, tweede orde snelheidsconstante voor vorming van het MPL-receptor complex
+        k.T = 0.63, # 1/h, eerste orde snelheidsconstante voor translocatie van het MPL-receptor complex naar de nucleus
+        k.re = 0.57, # 1/h, eerste orde snelheidsconstanten voor ‘recovery’ van de receptor van de celkern naar het cytosol
+        R.f = 0.49, # fractie vrije receptor die gerecycled wordt
+        k.d_R = 0.0572, # 1/h eerste orde snelheidsconstante voor afbraak van de receptor
+        k.d_Rm = 0.612, # eerste orde snelheidsconstante voor GR mRNA afbraak
+        k.s_R = 3.22, # eerste orde snelheidsconstante voor aanmaak van de receptor
+        D = (20 * 1000)/374.471 # nmol/L, als molgewicht[MPL] = 374.471 g/mol
+)
+
+state <- c(
+        mRNA = 4.74, # fmol / g liver, basisniveau van de concentratie receptor mRNA
+        Free_receptor = 267, # fmol/mg protein, basisniveau van de concentratie vrije receptor
+        DR = 0, # fmol/mg protein, dichtheid van MPL
+        MPL_conc = 0 # fmol/mg protein, hoeveelheid van MPL
+)
+
+volume <- function(t, y, parms){
+  with(as.list(c(parms, y)),{
+    delta.mRNA_R <- k.s_Rm * (1 - ( MPL_conc / (IC.50_Rm + MPL_conc) ) ) - k.d_Rm * mRNA
+    delta.R <- k.s_R * mRNA + R.f * k.re * MPL_conc - k.on * D * Free_receptor - k.d_R * Free_receptor
+    delta.DR <- k.on * D * Free_receptor - k.T * DR
+    delta.MPL_conc <- k.T * DR - k.re * MPL_conc
+    return( list( c(delta.mRNA_R, delta.R, delta.DR, delta.MPL_conc ) ) )
+  })
+}
+
+times <- seq(0, 168, by = 1)
+
+out_model <- ode(times = times, y = state, parms = params, func = volume, method = "euler")
+out_model <- as.data.frame(out_model)
+```
 # Assignment 1
 
 ```{r plot}
