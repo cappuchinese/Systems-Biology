@@ -3,56 +3,64 @@ title: Detailed Analysis
 author: Lisa Hu, Niek Scholten
 output:
   pdf_document:
-    toc: true
-    toc_depth: 1
     latex_engine: xelatex
 ---
 ```{r setup, include = FALSE, warning = FALSE, message = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_chunk$set(cache = TRUE)
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
 ```
 
 ```{r libaries, message = FALSE, warning = FALSE}
-packages <- c("deSolve", "ggplot2")
+packages <- c("deSolve", "ggplot2", "formatR", "scales")
 invisible(lapply(packages, library, character.only = T))
 ```
 
 ```{r data-loading}
 MPL_data <- read.csv("MPL.csv", na.strings = "NA")
-median_MPL_01 <- median(data$MPL_conc[data$dose==0.1], na.rm=T)
-median_MPL_01
 
-medians <- aggregate(data[,c("MPL_conc","mRNA","Free_receptor")],
-                     list(data$dose,data$time), median, na.rm=T)
+median_MPL_01 <- median(MPL_data$MPL_conc[MPL_data$dose==0.1], na.rm=T)
+median_MPL_03 <- median(MPL_data$MPL_conc[MPL_data$dose==0.3], na.rm=T)
+
+cat("Median of dose 0.1: ", median_MPL_01)
+cat("Median of dose 0.3: ", median_MPL_03)
+
+medians <- aggregate(MPL_data[,c("MPL_conc","mRNA","Free_receptor")],
+                     list(MPL_data$dose, MPL_data$time), median, na.rm=T)
 names(medians)[1:2] <- c("dose","time")
+
+median_01 <- subset(medians, medians$dose == 0 | medians$dose == 0.1)
+median_03 <- subset(medians, medians$dose == 0 | medians$dose == 0.3)
+
 head(medians)
 ```
 
 ```{r model}
 params <- c(
-        k.s_Rm = 2.90, # fmol/g liver/h, nulde snelheidsconstante voor GR mRNA synthese
-        IC.50_Rm = 26.2, # fmol/mg protein, concentratie DR(N) waarbij de aanmaak van receptor mRNA daalt tot 50% van de basis waarde
-        k.on = 0.00329, # L/nmol/h, tweede orde snelheidsconstante voor vorming van het MPL-receptor complex
-        k.T = 0.63, # 1/h, eerste orde snelheidsconstante voor translocatie van het MPL-receptor complex naar de nucleus
-        k.re = 0.57, # 1/h, eerste orde snelheidsconstanten voor ‘recovery’ van de receptor van de celkern naar het cytosol
+        k.s_Rm = 2.90, # fmol/g liver/h, 0e k voor GR mRNA synthese
+        IC.50_Rm = 26.2, # fmol/mg protein, concentratie DR(N) wat mRNAR inhibeert
+        k.on = 0.00329, # L/nmol/h, 2e orde k voor vorming MPL-receptor complex
+        k.T = 0.63, # 1/h, 1e orde k voor translocatie MPL-receptor complex naar nucleus
+        k.re = 0.57, # 1/h, 1e orde k voor ‘recovery’ receptor (celkern -> cytosol)
         R.f = 0.49, # fractie vrije receptor die gerecycled wordt
-        k.d_R = 0.0572, # 1/h eerste orde snelheidsconstante voor afbraak van de receptor
-        k.d_Rm = 0.612, # eerste orde snelheidsconstante voor GR mRNA afbraak
-        k.s_R = 3.22, # eerste orde snelheidsconstante voor aanmaak van de receptor
-        D = (20 * 1000)/374.471 # nmol/L, als molgewicht[MPL] = 374.471 g/mol
+        k.d_R = 0.0572, # 1/h, 1e orde k voor afbraak van de receptor
+        k.d_Rm = 0.612, # 1e orde k voor GR mRNA afbraak
+        k.s_R = 3.22, # 1e orde k voor aanmaak receptor
+        D = (0 * 1000)/374.471 # nmol/L, als molgewicht[MPL] = 374.471 g/mol
 )
 
 state <- c(
-        mRNA = 4.74, # fmol / g liver, basisniveau van de concentratie receptor mRNA
-        Free_receptor = 267, # fmol/mg protein, basisniveau van de concentratie vrije receptor
-        DR = 0, # fmol/mg protein, dichtheid van MPL
-        MPL_conc = 0 # fmol/mg protein, hoeveelheid van MPL
+        mRNA = 4.74, # fmol / g liver, basisniveau concentratie receptor mRNA
+        Free_receptor = 267, # fmol/mg protein, basisniveau concentratie vrije receptor
+        DR = 0, # fmol/mg protein, dichtheid MPL
+        MPL_conc = 0 # fmol/mg protein, hoeveelheid MPL
 )
 
 volume <- function(t, y, parms){
   with(as.list(c(parms, y)),{
     delta.mRNA_R <- k.s_Rm * (1 - ( MPL_conc / (IC.50_Rm + MPL_conc) ) ) - k.d_Rm * mRNA
-    delta.R <- k.s_R * mRNA + R.f * k.re * MPL_conc - k.on * D * Free_receptor - k.d_R * Free_receptor
+    delta.R <- k.s_R * mRNA + R.f * k.re * MPL_conc -
+            k.on * D * Free_receptor - k.d_R * Free_receptor
     delta.DR <- k.on * D * Free_receptor - k.T * DR
     delta.MPL_conc <- k.T * DR - k.re * MPL_conc
     return( list( c(delta.mRNA_R, delta.R, delta.DR, delta.MPL_conc ) ) )
@@ -61,37 +69,59 @@ volume <- function(t, y, parms){
 
 times <- seq(0, 168, by = 1)
 
-out_model <- ode(times = times, y = state, parms = params, func = volume, method = "euler")
-out_model <- as.data.frame(out_model)
+# model_00 <- ode(times = times, y = state,
+#                  parms = params, func = volume, method = "euler")
+# model_00 <- as.data.frame(model_00)
+
+params$D <- (median_MPL_01 * 1000)/374.471
+model_01 <- ode(times = times, y = state,
+                 parms = params, func = volume, method = "euler")
+model_01 <- as.data.frame(model_01)
+
+params$D <- (median_MPL_03 * 1000)/374.471
+model_03 <- ode(times = times, y = state,
+                 parms = params, func = volume, method = "euler")
+model_03 <- as.data.frame(model_03)
 ```
+
 # Assignment 1
 
 ```{r plot}
+group.cols <- hue_pal()(4)
+colours <- c("Median 0.1" = group.cols[1], "Median 0.3" = group.cols[2],
+             "Model 0.1" = group.cols[3], "Model 0.3" = group.cols[4])
 ggplot(data = MPL_data, mapping = aes(x = time, y = mRNA)) +
-        geom_point() +
-        geom_line(data = medians, color = "red") +
-        geom_line(data = out_model, color = "black") +
-        xlab("Time") +
-        ylab("mRNA (fmol/g)") +
-        ggtitle("mRNA over time")
+        geom_point(size = 1) +
+        geom_line(data = median_01, color = colours["Median 0.1"]) +
+        geom_line(data = median_03, color = colours["Median 0.3"]) +
+        geom_line(data = model_01, linetype = "dashed", color = colours["Model 0.1"]) +
+        geom_line(data = model_03, linetype = "dashed", color = colours["Model 0.3"]) +
+        labs(x = "Time", y = "mRNA (fmol/g)", title = "mRNA over time") +
+        theme_bw()
 
 ggplot(data = MPL_data, mapping = aes(x = time, y = MPL_conc)) +
-        geom_point() +
-        geom_line(data = medians, color = "red") +
-        geom_line(data = out_model, color = "black") +
-        xlab("Time") +
-        ylab("MPL concentration (fmol/mg)") +
-        ggtitle("MPL concentration over time")
+        geom_point(size = 1) +
+        geom_line(data = median_01, color = colours["Median 0.1"]) +
+        geom_line(data = median_03, color = colours["Median 0.3"]) +
+        geom_line(data = model_01, linetype = "dashed", color = colours["Model 0.1"]) +
+        geom_line(data = model_03, linetype = "dashed", color = colours["Model 0.3"]) +
+        labs(x = "Time", y = "MPL concentration (fmol/mg)",
+             title = "MPL concentration over time") +
+        theme_bw()
 
 ggplot(data = MPL_data, mapping = aes(x = time, y = Free_receptor)) +
-        geom_point() +
-        geom_line(data = medians, color = "red") +
-        geom_line(data = out_model, color = "black") +
-        xlab("Time") +
-        ylab("Free receptor concentration (fmol/mg)") +
-        ggtitle("Free receptor concentration over time")
+        geom_point(size = 1) +
+        geom_line(data = median_01, color = colours["Median 0.1"]) +
+        geom_line(data = median_03, color = colours["Median 0.3"]) +
+        geom_line(data = model_01, linetype = "dashed", color = colours["Model 0.1"]) +
+        geom_line(data = model_03, linetype = "dashed", color = colours["Model 0.3"]) +
+        labs(x = "Time", y = "Free receptor concentration (fmol/mg)",
+             title = "Free receptor concentration over time") +
+        theme_bw()
 ```
 
-### Why is it best practice to plot the median for the experimental data? Explain in your report.
-The median doesn't change with huge outliers. So the data is more reliable.
-So if there is a significant difference, it will show.
+* [1] Why is it best practice to plot the median for the experimental data?
+>The median does not change with huge outliers, so the data is more reliable. If there is a significant difference, it will show.
+* [2] How do the results of the simulations depend on the dose and concentration of the drug?
+>
+* [3] Are the results of the model in line with experimental data?
