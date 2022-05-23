@@ -83,7 +83,9 @@ model_03 <- as.data.frame(model_03)
 # Assignment 1
 
 ```{r plot}
-group.cols <- hue_pal()(4)
+## Create the colours
+group.cols <- hue_pal()(5)
+## Assign each colour for legibility
 colours <- c("Median 0.1" = group.cols[1], "Median 0.3" = group.cols[2],
              "Model 0.1" = group.cols[3], "Model 0.3" = group.cols[4],
              "Model 20" = group.cols[5])
