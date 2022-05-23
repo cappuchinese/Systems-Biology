@@ -17,7 +17,7 @@ invisible(lapply(packages, library, character.only = T))
 ```
 
 ```{r data-loading}
-MPL_data <- read.csv("MPL.csv", na.strings = "NA")
+MPL_data <- read.csv("Week3/MPL.csv", na.strings = "NA")
 
 median_MPL_01 <- median(MPL_data$MPL_conc[MPL_data$dose==0.1], na.rm=T)
 median_MPL_03 <- median(MPL_data$MPL_conc[MPL_data$dose==0.3], na.rm=T)
@@ -69,10 +69,6 @@ volume <- function(t, y, parms){
 
 times <- seq(0, 168, by = 1)
 
-# model_00 <- ode(times = times, y = state,
-#                  parms = params, func = volume, method = "euler")
-# model_00 <- as.data.frame(model_00)
-
 params$D <- (median_MPL_01 * 1000)/374.471
 model_01 <- ode(times = times, y = state,
                  parms = params, func = volume, method = "euler")
@@ -89,39 +85,270 @@ model_03 <- as.data.frame(model_03)
 ```{r plot}
 group.cols <- hue_pal()(4)
 colours <- c("Median 0.1" = group.cols[1], "Median 0.3" = group.cols[2],
-             "Model 0.1" = group.cols[3], "Model 0.3" = group.cols[4])
+             "Model 0.1" = group.cols[3], "Model 0.3" = group.cols[4],
+             "Model 20" = group.cols[5])
 ggplot(data = MPL_data, mapping = aes(x = time, y = mRNA)) +
         geom_point(size = 1) +
-        geom_line(data = median_01, color = colours["Median 0.1"]) +
-        geom_line(data = median_03, color = colours["Median 0.3"]) +
-        geom_line(data = model_01, linetype = "dashed", color = colours["Model 0.1"]) +
-        geom_line(data = model_03, linetype = "dashed", color = colours["Model 0.3"]) +
+        geom_line(data = median_01, aes(color ="Median 0.1")) +
+        geom_line(data = median_03, aes(color = "Median 0.3")) +
+        geom_line(data = model_01, linetype = "dashed", aes(color = "Model 0.1")) +
+        geom_line(data = model_03, linetype = "dashed", aes(color = "Model 0.3")) +
         labs(x = "Time", y = "mRNA (fmol/g)", title = "mRNA over time") +
-        theme_bw()
+        theme(legend.position = "bottom") +
+        scale_colour_manual(values = group.cols[1:4],
+                            limits = c("Median 0.1", "Median 0.3",
+                                       "Model 0.1", "Model 0.3") ) +
+        guides(color = guide_legend(title = "",
+                                    override.aes = list(linetype = c(1, 1, 2, 2) ) ) )
 
 ggplot(data = MPL_data, mapping = aes(x = time, y = MPL_conc)) +
         geom_point(size = 1) +
-        geom_line(data = median_01, color = colours["Median 0.1"]) +
-        geom_line(data = median_03, color = colours["Median 0.3"]) +
-        geom_line(data = model_01, linetype = "dashed", color = colours["Model 0.1"]) +
-        geom_line(data = model_03, linetype = "dashed", color = colours["Model 0.3"]) +
+        geom_line(data = median_01, aes(color ="Median 0.1")) +
+        geom_line(data = median_03, aes(color = "Median 0.3")) +
+        geom_line(data = model_01, linetype = "dashed", aes(color = "Model 0.1")) +
+        geom_line(data = model_03, linetype = "dashed", aes(color = "Model 0.3")) +
         labs(x = "Time", y = "MPL concentration (fmol/mg)",
              title = "MPL concentration over time") +
-        theme_bw()
+        theme(legend.position = "bottom") +
+        scale_colour_manual(values = group.cols[1:4],
+                            limits = c("Median 0.1", "Median 0.3",
+                                       "Model 0.1", "Model 0.3") ) +
+        guides(color = guide_legend(title = "",
+                                    override.aes = list(linetype = c(1, 1, 2, 2) ) ) )
 
 ggplot(data = MPL_data, mapping = aes(x = time, y = Free_receptor)) +
         geom_point(size = 1) +
-        geom_line(data = median_01, color = colours["Median 0.1"]) +
-        geom_line(data = median_03, color = colours["Median 0.3"]) +
-        geom_line(data = model_01, linetype = "dashed", color = colours["Model 0.1"]) +
-        geom_line(data = model_03, linetype = "dashed", color = colours["Model 0.3"]) +
+        geom_line(data = median_01, aes(color ="Median 0.1")) +
+        geom_line(data = median_03, aes(color = "Median 0.3")) +
+        geom_line(data = model_01, linetype = "dashed", aes(color = "Model 0.1")) +
+        geom_line(data = model_03, linetype = "dashed", aes(color = "Model 0.3")) +
         labs(x = "Time", y = "Free receptor concentration (fmol/mg)",
              title = "Free receptor concentration over time") +
-        theme_bw()
+       theme(legend.position = "bottom") +
+        scale_colour_manual(values = group.cols[1:4],
+                            limits = c("Median 0.1", "Median 0.3",
+                                       "Model 0.1", "Model 0.3") ) +
+        guides(color = guide_legend(title = "",
+                                    override.aes = list(linetype = c(1, 1, 2, 2) ) ) )
 ```
 
-* [1] Why is it best practice to plot the median for the experimental data?
+* [1] Why is it best practice to plot the median for the experimental data?168
 >The median does not change with huge outliers, so the data is more reliable. If there is a significant difference, it will show.
 * [2] How do the results of the simulations depend on the dose and concentration of the drug?
->
+>The dose is very important in determining how low the graph will go. The shape of the median lines is generally unaffected.
 * [3] Are the results of the model in line with experimental data?
+>Yes, to some extent. The values that the experiment and the model end on is similar. But the values between the start and the end fluctuate a bit.
+
+# Assignment 2
+
+```{r comparison}
+params$D <- (20 * 1000)/374.471
+model_20 <- ode(times = times, y = state,
+                 parms = params, func = volume, method = "euler")
+model_20 <- as.data.frame(model_20)
+
+ggplot(data = MPL_data, mapping = aes(x = time, y = mRNA)) +
+        geom_line(data = model_01, aes(color = "Model 0.1")) +
+        geom_line(data = model_03, aes(color = "Model 0.3")) +
+        geom_line(data = model_20, aes(color = "Model 20")) +
+        labs(x = "Time", y = "mRNA (fmol/g)", title = "mRNA over time") +
+        theme(legend.position = "bottom") +
+        scale_colour_manual(name = "", values = group.cols[3:5],
+                            limits = c("Model 0.1", "Model 0.3", "Model 20"))
+
+
+ggplot(data = MPL_data, mapping = aes(x = time, y = MPL_conc)) +
+        geom_line(data = model_01, aes(color = "Model 0.1")) +
+        geom_line(data = model_03, aes(color = "Model 0.3")) +
+        geom_line(data = model_20, aes(color = "Model 20")) +
+        labs(x = "Time", y = "MPL concentration (fmol/mg)",
+             title = "MPL concentration over time") +
+        theme(legend.position = "bottom") +
+        scale_colour_manual(name = "", values = group.cols[3:5],
+                            limits = c("Model 0.1", "Model 0.3", "Model 20"))
+
+ggplot(data = MPL_data, mapping = aes(x = time, y = Free_receptor)) +
+        geom_line(data = model_01, aes(color = "Model 0.1")) +
+        geom_line(data = model_03, aes(color = "Model 0.3")) +
+        geom_line(data = model_20, aes(color = "Model 20")) +
+        labs(x = "Time", y = "Free receptor concentration (fmol/mg)",
+             title = "Free receptor concentration over time") +
+        theme(legend.position = "bottom") +
+        scale_colour_manual(name = "", values = group.cols[3:5],
+                            limits = c("Model 0.1", "Model 0.3", "Model 20"))
+```
+
+* [1] What would be the time course concentration of the activated drug-receptor complex if there was no auto-regulation of glucocorticoid receptor, i.e. if there was no effect of drug on the synthesis of the receptor mRNA? What formula needs to be changed?
+
+```{r nodrugs}
+receptor_noDrugs <- function(t, y, parms){
+  with(as.list(c(parms, y)),{
+    delta.mRNA_R <- k.s_Rm * (1 - ( MPL_conc / (IC.50_Rm + MPL_conc) ) ) - k.d_Rm * mRNA
+    delta.R <- k.s_R * mRNA + R.f * k.re * MPL_conc -
+            k.on  * Free_receptor - k.d_R * Free_receptor
+    delta.DR <- k.on * Free_receptor - k.T * DR
+    delta.MPL_conc <- k.T * DR - k.re * MPL_conc
+    return( list( c(delta.mRNA_R, delta.R, delta.DR, delta.MPL_conc ) ) )
+  })
+}
+
+model_noDrugs <- as.data.frame(ode(times = times, y = state,
+                 parms = params, func = receptor_noDrugs, method = "euler"))
+
+ggplot(data = MPL_data, mapping = aes(x = time, y = mRNA)) +
+        geom_line(data = model_noDrugs, linetype = "solid", color = "red") +
+        geom_line(data = model_20, linetype = "solid", color = "blue") +
+        labs(x = "Time", y = "mRNA (fmol/g)", title = "mRNA over time") +
+        theme_bw()
+
+```
+The figure above shows that when D is taken out of the equation, the mRNA concentration drops a bit and stays steady in that state. This line is shown in red.
+The blue line details the normal scenario in which the drug is working correctly with a dose of 20.
+
+* [2] What is the time course of receptor and mRNA concentrations when the drug treatment is stopped? So after the steady state is reached (at time t_steady), D should be set to zero and the simulation should continue from time t_steady till the new steady state is reached (t_steady_second).
+
+```{r nodrugcombi}
+
+state <- c(
+        mRNA = model_20$mRNA[model_20$time == 58],
+        Free_receptor = model_20$Free_receptor[model_20$time == 58],
+        DR = model_20$DR[model_20$time == 58],
+        MPL_conc = model_20$MPL_conc[model_20$time == 58]
+)
+
+times <- seq(58, 148, by = 1)
+
+model_noDrugs_fromSteady <- as.data.frame(ode(times = times, y = state,
+                 parms = params, func = receptor_noDrugs, method = "euler"))
+
+state <- c(
+        mRNA = model_noDrugs_fromSteady$mRNA[model_noDrugs_fromSteady$time == 148],
+        Free_receptor = model_noDrugs_fromSteady$Free_receptor[model_noDrugs_fromSteady$time == 148],
+        DR = model_noDrugs_fromSteady$DR[model_noDrugs_fromSteady$time == 148],
+        MPL_conc = model_noDrugs_fromSteady$MPL_conc[model_noDrugs_fromSteady$time == 148]
+)
+
+times <- seq(148, 198, by = 1)
+
+model_Drugs_fromSteady <- as.data.frame(ode(times = times, y = state,
+                 parms = params, func = volume, method = "euler"))
+
+ggplot(data = MPL_data, mapping = aes(x = time, y = mRNA)) +
+        geom_line(data = model_noDrugs_fromSteady, linetype = "solid", color = "red") +
+        geom_line(data = model_Drugs_fromSteady, linetype = "solid", color = "blue") +
+        geom_line(data = model_20[0:59,], linetype = "solid", color = "blue") +
+        labs(x = "Time", y = "mRNA (fmol/g)", title = "mRNA over time") +
+        theme_bw()
+
+ggplot(data = MPL_data, mapping = aes(x = time, y = Free_receptor)) +
+        geom_line(data = model_noDrugs_fromSteady, linetype = "solid", color = "red") +
+        geom_line(data = model_Drugs_fromSteady, linetype = "solid", color = "blue") +
+        geom_line(data = model_20[0:59,], linetype = "solid", color = "blue") +
+        labs(x = "Time", y = "Free receptor concentration (fmol/mg)", title = "Free receptor concentration over time") +
+        theme_bw()
+```
+The red part of the line indicates the period where there is no drug present in the system. The blue parts indicate an administration of a single dose of 20 ng/ml.
+
+* [3] Different corticosteroids show different association rates from receptors ($$k_{on}$$) and different dissociation rates (in this model reflected by $$k_{re}$$). Assuming the same concentrations of the drug, what is the effect of different values of $$k_{on}$$ and $$k_{re}$$ (consider 2 and 5 times increase and decrease of both parameters separately) on the receptor and mRNA dynamics? Adjust $$k_{on}$$ and $$k_{re}$$ as below and plot the results of the simulation for each change. Note: Simulations should be run for 4 new values of $$k_{on}$$: 0.00329/5, 0.00329/2, 0.00329*2 and 0.00329*5. The results should be compared to the basic scenario when $$k_{on}$$ = 0.00329 Separately, simulations should be run for 4 new values of $$k_{re}$$: 0.57/5, 0.57/2, 0.57*2 and 0.57*5. The results should be compared to the basic scenario when $$k_{re}$$= 0.57.
+
+```{r kondiff}
+times <- seq(0, 168, by = 1)
+
+state <- c(
+        mRNA = 4.74, # fmol / g liver, basisniveau concentratie receptor mRNA
+        Free_receptor = 267, # fmol/mg protein, basisniveau concentratie vrije receptor
+        DR = 0, # fmol/mg protein, dichtheid MPL
+        MPL_conc = 0 # fmol/mg protein, hoeveelheid MPL
+)
+
+## Create the colours
+group.cols <- hue_pal()(4)
+## Assign each colour for legibility
+colours <- c("5 less" = group.cols[1], "2 less" = group.cols[2],
+             "2 more" = group.cols[3], "5 more" = group.cols[4])
+
+params$k.on <- 0.0039/5
+
+model_k.on_min5 <- as.data.frame(ode(times = times, y = state,
+                 parms = params, func = volume, method = "euler"))
+
+params$k.on <- 0.0039/2
+
+model_k.on_min2 <- as.data.frame(ode(times = times, y = state,
+                 parms = params, func = volume, method = "euler"))
+
+params$k.on <- 0.0039*2
+
+model_k.on_plus2 <- as.data.frame(ode(times = times, y = state,
+                 parms = params, func = volume, method = "euler"))
+
+params$k.on <- 0.0039*5
+
+model_k.on_plus5 <- as.data.frame(ode(times = times, y = state,
+                 parms = params, func = volume, method = "euler"))
+
+ggplot(mapping = aes(x = time, y = mRNA)) +
+        geom_line(data = model_k.on_min5, aes(color = "5 less")) +
+        geom_line(data = model_k.on_min2, aes(color = "2 less")) +
+        geom_line(data = model_k.on_plus2, aes(color = "2 more")) +
+        geom_line(data = model_k.on_plus5, aes(color = "5 more")) +
+        labs(x = "Time", y = "mRNA (fmol/g)", title = "mRNA over time") +
+        theme(legend.position = "bottom") +
+        scale_colour_manual(name = "", values = group.cols,
+                            limits = c("5 less", "2 less", "2 more", "5 more"))
+
+ggplot(mapping = aes(x = time, y = Free_receptor)) +
+        geom_line(data = model_k.on_min5, aes(color = "5 less")) +
+        geom_line(data = model_k.on_min2, aes(color = "2 less")) +
+        geom_line(data = model_k.on_plus2, aes(color = "2 more")) +
+        geom_line(data = model_k.on_plus5, aes(color = "5 more")) +
+        labs(x = "Time", y = "Free receptor concentration (fmol/mg)",
+             title = "Free receptor concentration over time") +
+        theme(legend.position = "bottom") +
+        scale_colour_manual(name = "", values = group.cols,
+                            limits = c("5 less", "2 less", "2 more", "5 more"))
+```
+
+```{r krediff}
+params$k.on <- 0.0039
+params$k.re <- 0.57/5
+
+model_k.re_min5 <- as.data.frame(ode(times = times, y = state,
+                 parms = params, func = volume, method = "euler"))
+
+params$k.re <- 0.57/2
+
+model_k.re_min2 <- as.data.frame(ode(times = times, y = state,
+                 parms = params, func = volume, method = "euler"))
+
+params$k.re <- 0.57*2
+
+model_k.re_plus2 <- as.data.frame(ode(times = times, y = state,
+                 parms = params, func = volume, method = "euler"))
+
+params$k.re <- 0.57*5
+
+model_k.re_plus5 <- as.data.frame(ode(times = times, y = state,
+                 parms = params, func = volume, method = "euler"))
+
+ggplot(data = MPL_data, mapping = aes(x = time, y = mRNA)) +
+        geom_line(data = model_k.re_min5, aes(color = "5 less")) +
+        geom_line(data = model_k.re_min2, aes(color = "2 less")) +
+        geom_line(data = model_k.re_plus2, aes(color = "2 more")) +
+        geom_line(data = model_k.re_plus5, aes(color = "5 more")) +
+        labs(x = "Time", y = "mRNA (fmol/g)", title = "mRNA over time") +
+        theme(legend.position = "bottom") +
+        scale_colour_manual(name = "", values = group.cols,
+                            limits = c("5 less", "2 less", "2 more", "5 more"))
+
+ggplot(data = MPL_data, mapping = aes(x = time, y = Free_receptor)) +
+        geom_line(data = model_k.re_min5, aes(color = "5 less")) +
+        geom_line(data = model_k.re_min2, aes(color = "2 less")) +
+        geom_line(data = model_k.re_plus2, aes(color = "2 more")) +
+        geom_line(data = model_k.re_plus5, aes(color = "5 more")) +
+        labs(x = "Time", y = "Free receptor concentration (fmol/mg)",
+             title = "Free receptor concentration over time") +
+        theme(legend.position = "bottom") +
+        scale_colour_manual(name = "", values = group.cols,
+                            limits = c("5 less", "2 less", "2 more", "5 more"))
+```
