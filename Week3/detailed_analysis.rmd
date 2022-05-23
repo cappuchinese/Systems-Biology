@@ -17,7 +17,7 @@ invisible(lapply(packages, library, character.only = T))
 ```
 
 ```{r data-loading}
-MPL_data <- read.csv("Week3/MPL.csv", na.strings = "NA")
+MPL_data <- read.csv("MPL.csv", na.strings = "NA")
 
 median_MPL_01 <- median(MPL_data$MPL_conc[MPL_data$dose==0.1], na.rm=T)
 median_MPL_03 <- median(MPL_data$MPL_conc[MPL_data$dose==0.3], na.rm=T)
