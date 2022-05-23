@@ -254,7 +254,7 @@ The red part of the line indicates the period where there is no drug present in 
 * [3] Different corticosteroids show different association rates from receptors ($$k_{on}$$) and different dissociation rates (in this model reflected by $$k_{re}$$). Assuming the same concentrations of the drug, what is the effect of different values of $$k_{on}$$ and $$k_{re}$$ (consider 2 and 5 times increase and decrease of both parameters separately) on the receptor and mRNA dynamics? Adjust $$k_{on}$$ and $$k_{re}$$ as below and plot the results of the simulation for each change. Note: Simulations should be run for 4 new values of $$k_{on}$$: 0.00329/5, 0.00329/2, 0.00329*2 and 0.00329*5. The results should be compared to the basic scenario when $$k_{on}$$ = 0.00329 Separately, simulations should be run for 4 new values of $$k_{re}$$: 0.57/5, 0.57/2, 0.57*2 and 0.57*5. The results should be compared to the basic scenario when $$k_{re}$$= 0.57.
 
 ```{r kondiff}
-times <- seq(0, 168, by = 1)
+times <- seq(0, 48, by=0.01)
 
 state <- c(
         mRNA = 4.74, # fmol / g liver, basisniveau concentratie receptor mRNA
@@ -263,11 +263,28 @@ state <- c(
         MPL_conc = 0 # fmol/mg protein, hoeveelheid MPL
 )
 
+params <- c(
+        k.s_Rm = 2.90, # fmol/g liver/h, 0e k voor GR mRNA synthese
+        IC.50_Rm = 26.2, # fmol/mg protein, concentratie DR(N) wat mRNAR inhibeert
+        k.on = 0.00329, # L/nmol/h, 2e orde k voor vorming MPL-receptor complex
+        k.T = 0.63, # 1/h, 1e orde k voor translocatie MPL-receptor complex naar nucleus
+        k.re = 0.57, # 1/h, 1e orde k voor ‘recovery’ receptor (celkern -> cytosol)
+        R.f = 0.49, # fractie vrije receptor die gerecycled wordt
+        k.d_R = 0.0572, # 1/h, 1e orde k voor afbraak van de receptor
+        k.d_Rm = 0.612, # 1e orde k voor GR mRNA afbraak
+        k.s_R = 3.22, # 1e orde k voor aanmaak receptor
+        D = (20 * 1000)/374.471 # nmol/L, als molgewicht[MPL] = 374.471 g/mol
+)
+
 ## Create the colours
-group.cols <- hue_pal()(4)
+
 ## Assign each colour for legibility
 colours <- c("5 less" = group.cols[1], "2 less" = group.cols[2],
-             "2 more" = group.cols[3], "5 more" = group.cols[4])
+             "2 more" = group.cols[3], "5 more" = group.cols[4],
+             "ref" = group.cols[5])
+
+model_k.on_ref <- as.data.frame(ode(times = times, y = state,
+                 parms = params, func = volume, method = "euler"))
 
 params$k.on <- 0.0039/5
 
@@ -290,6 +307,7 @@ model_k.on_plus5 <- as.data.frame(ode(times = times, y = state,
                  parms = params, func = volume, method = "euler"))
 
 ggplot(mapping = aes(x = time, y = mRNA)) +
+        geom_line(data = model_k.on_ref, linetype = "dashed", aes(color = "ref")) +
         geom_line(data = model_k.on_min5, aes(color = "5 less")) +
         geom_line(data = model_k.on_min2, aes(color = "2 less")) +
         geom_line(data = model_k.on_plus2, aes(color = "2 more")) +
@@ -297,9 +315,12 @@ ggplot(mapping = aes(x = time, y = mRNA)) +
         labs(x = "Time", y = "mRNA (fmol/g)", title = "mRNA over time") +
         theme(legend.position = "bottom") +
         scale_colour_manual(name = "", values = group.cols,
-                            limits = c("5 less", "2 less", "2 more", "5 more"))
+                            limits = c("ref", "5 less", "2 less", "2 more", "5 more"))
+        guides(color = guide_legend(title = "",
+                                    override.aes = list(linetype = c(2, 1, 1, 1, 1) ) ) )
 
 ggplot(mapping = aes(x = time, y = Free_receptor)) +
+        geom_line(data = model_k.on_ref, linetype = "dashed", aes(color = "ref")) +
         geom_line(data = model_k.on_min5, aes(color = "5 less")) +
         geom_line(data = model_k.on_min2, aes(color = "2 less")) +
         geom_line(data = model_k.on_plus2, aes(color = "2 more")) +
@@ -308,11 +329,28 @@ ggplot(mapping = aes(x = time, y = Free_receptor)) +
              title = "Free receptor concentration over time") +
         theme(legend.position = "bottom") +
         scale_colour_manual(name = "", values = group.cols,
-                            limits = c("5 less", "2 less", "2 more", "5 more"))
+                            limits = c("ref", "5 less", "2 less", "2 more", "5 more"))
+        guides(color = guide_legend(title = "",
+                                    override.aes = list(linetype = c(2, 1, 1, 1, 1) ) ) )
 ```
 
 ```{r krediff}
-params$k.on <- 0.0039
+params <- c(
+        k.s_Rm = 2.90, # fmol/g liver/h, 0e k voor GR mRNA synthese
+        IC.50_Rm = 26.2, # fmol/mg protein, concentratie DR(N) wat mRNAR inhibeert
+        k.on = 0.00329, # L/nmol/h, 2e orde k voor vorming MPL-receptor complex
+        k.T = 0.63, # 1/h, 1e orde k voor translocatie MPL-receptor complex naar nucleus
+        k.re = 0.57, # 1/h, 1e orde k voor ‘recovery’ receptor (celkern -> cytosol)
+        R.f = 0.49, # fractie vrije receptor die gerecycled wordt
+        k.d_R = 0.0572, # 1/h, 1e orde k voor afbraak van de receptor
+        k.d_Rm = 0.612, # 1e orde k voor GR mRNA afbraak
+        k.s_R = 3.22, # 1e orde k voor aanmaak receptor
+        D = (20 * 1000)/374.471 # nmol/L, als molgewicht[MPL] = 374.471 g/mol
+)
+
+model_k.re_ref <- as.data.frame(ode(times = times, y = state,
+                 parms = params, func = volume, method = "euler"))
+
 params$k.re <- 0.57/5
 
 model_k.re_min5 <- as.data.frame(ode(times = times, y = state,
@@ -334,6 +372,7 @@ model_k.re_plus5 <- as.data.frame(ode(times = times, y = state,
                  parms = params, func = volume, method = "euler"))
 
 ggplot(data = MPL_data, mapping = aes(x = time, y = mRNA)) +
+        geom_line(data = model_k.re_ref, linetype = "dashed", aes(color = "ref")) +
         geom_line(data = model_k.re_min5, aes(color = "5 less")) +
         geom_line(data = model_k.re_min2, aes(color = "2 less")) +
         geom_line(data = model_k.re_plus2, aes(color = "2 more")) +
@@ -341,9 +380,12 @@ ggplot(data = MPL_data, mapping = aes(x = time, y = mRNA)) +
         labs(x = "Time", y = "mRNA (fmol/g)", title = "mRNA over time") +
         theme(legend.position = "bottom") +
         scale_colour_manual(name = "", values = group.cols,
-                            limits = c("5 less", "2 less", "2 more", "5 more"))
+                            limits = c("ref", "5 less", "2 less", "2 more", "5 more")) +
+        guides(color = guide_legend(title = "",
+                                    override.aes = list(linetype = c(2, 1, 1, 1, 1) ) ) )
 
 ggplot(data = MPL_data, mapping = aes(x = time, y = Free_receptor)) +
+        geom_line(data = model_k.re_ref, linetype = "dashed", aes(color = "ref")) +
         geom_line(data = model_k.re_min5, aes(color = "5 less")) +
         geom_line(data = model_k.re_min2, aes(color = "2 less")) +
         geom_line(data = model_k.re_plus2, aes(color = "2 more")) +
@@ -352,5 +394,7 @@ ggplot(data = MPL_data, mapping = aes(x = time, y = Free_receptor)) +
              title = "Free receptor concentration over time") +
         theme(legend.position = "bottom") +
         scale_colour_manual(name = "", values = group.cols,
-                            limits = c("5 less", "2 less", "2 more", "5 more"))
+                            limits = c("ref", "5 less", "2 less", "2 more", "5 more")) +
+        guides(color = guide_legend(title = "",
+                                    override.aes = list(linetype = c(2, 1, 1, 1, 1) ) ) )
 ```
