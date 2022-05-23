@@ -398,3 +398,61 @@ ggplot(data = MPL_data, mapping = aes(x = time, y = Free_receptor)) +
         guides(color = guide_legend(title = "",
                                     override.aes = list(linetype = c(2, 1, 1, 1, 1) ) ) )
 ```
+
+* [4] What would happen if the synthesis of the receptor was completely blocked?
+To simulate this situation, $$k_{s_R}$$ needs to be put to zero.
+
+```{r receptor_block}
+params <- c(
+        k.s_Rm = 2.90, # fmol/g liver/h, 0e k voor GR mRNA synthese
+        IC.50_Rm = 26.2, # fmol/mg protein, concentratie DR(N) wat mRNAR inhibeert
+        k.on = 0.00329, # L/nmol/h, 2e orde k voor vorming MPL-receptor complex
+        k.T = 0.63, # 1/h, 1e orde k voor translocatie MPL-receptor complex naar nucleus
+        k.re = 0.57, # 1/h, 1e orde k voor ‘recovery’ receptor (celkern -> cytosol)
+        R.f = 0.49, # fractie vrije receptor die gerecycled wordt
+        k.d_R = 0.0572, # 1/h, 1e orde k voor afbraak van de receptor
+        k.d_Rm = 0.612, # 1e orde k voor GR mRNA afbraak
+        k.s_R = 0, # 1e orde k voor aanmaak receptor
+        D = (20 * 1000)/374.471 # nmol/L, als molgewicht[MPL] = 374.471 g/mol
+)
+
+state <- c(
+        mRNA = 4.74, # fmol / g liver, basisniveau concentratie receptor mRNA
+        Free_receptor = 267, # fmol/mg protein, basisniveau concentratie vrije receptor
+        DR = 0, # fmol/mg protein, dichtheid MPL
+        MPL_conc = 0 # fmol/mg protein, hoeveelheid MPL
+)
+times <- seq(0, 168, by = 1)
+no.Receptor <- as.data.frame(ode(times = times, y = state, parms = params,
+                                 func = volume, method = "euler"))
+
+ggplot(data = no.Receptor, mapping = aes(x = time, y = mRNA)) +
+        geom_line(aes(color = "No receptor")) +
+        geom_line(data = model_20, aes(color = "Model 20")) +
+        labs(x = "mRNA (fmol/g)", y = "Time", title = "No receptor synthesis (mRNA)") +
+        scale_colour_manual(name = "", values = group.cols[1:2],
+                            limits = c("No receptor", "Model 20"))
+
+ggplot(data = no.Receptor, mapping = aes(x = time, y = Free_receptor)) +
+        geom_line(aes(color = "No receptor")) +
+        geom_line(data = model_20, aes(color = "Model 20")) +
+        labs(x = "Free receptor concentration (fmol/mg)", y = "Time",
+             title = "No receptor synthesis (Free receptor)") +
+        scale_colour_manual(name = "", values = group.cols[1:2],
+                            limits = c("No receptor", "Model 20"))
+
+ggplot(data = no.Receptor, mapping = aes(x = time, y = DR)) +
+        geom_line(aes(color = "No receptor")) +
+        geom_line(data = model_20, aes(color = "Model 20")) +
+        labs(x = "DR (fmol/mg)", y = "Time", title = "No receptor synthesis (DR)") +
+        scale_colour_manual(name = "", values = group.cols[1:2],
+                            limits = c("No receptor", "Model 20"))
+
+ggplot(data = no.Receptor, mapping = aes(x = time, y = MPL_conc)) +
+        geom_line(aes(color = "No receptor")) +
+        geom_line(data = model_20, aes(color = "Model 20")) +
+        labs(x = "MPL concentration (fmol/mg)", y = "Time",
+             title = "No receptor synthesis (MPL concentration)") +
+        scale_colour_manual(name = "", values = group.cols[1:2],
+                            limits = c("No receptor", "Model 20"))
+```
