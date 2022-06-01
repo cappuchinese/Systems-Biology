@@ -11,36 +11,26 @@ knitr::opts_chunk$set(cache = TRUE)
 knitr::opts_chunk$set(warning = FALSE)
 knitr::opts_chunk$set(message = FALSE)
 knitr::opts_chunk$set(error = FALSE)
+knitr::opts_chunk$set(results = "hide")
 
-packages <- c("deSolve", "ggplot2", "formatR", "scales")
+packages <- c("deSolve", "ggplot2", "formatR", "scales", "ggpubr")
 invisible(lapply(packages, library, character.only = T))
 ```
 
-# Assignment 1
 # Data loading
 ```{r data-loading}
 ## Read the data
 MPL_data <- read.csv("MPL.csv", na.strings = "NA")
+## Rename the receptor
 names(MPL_data)[4:5] <- c("R.m0", "R.0")
-
-## Subset per dose
-data_01 <- subset(MPL_data, MPL_data$dose == 0 | MPL_data$dose == 0.1)
-data_03 <- subset(MPL_data, MPL_data$dose == 0 | MPL_data$dose == 0.3)
 
 ## Create the medians subsets
 medians <- aggregate(MPL_data[,c("MPL_conc","R.m0","R.0")],
                      list(MPL_data$dose, MPL_data$time), median, na.rm=T)
 names(medians)[1:2] <- c("dose","time")
-
-median_01 <- subset(medians, medians$dose == 0 | medians$dose == 0.1)
-median_03 <- subset(medians, medians$dose == 0 | medians$dose == 0.3)
-
-## Function that calculates D
-calc.D <- function(dose){
-  return( (dose * 1000)/374.471 )
-}
 ```
-\newpage
+
+# Assignment 1
 ## Implement the model
 Following experiments with methylprednisolone in rats, a set of values for the model is defined:
 
@@ -66,109 +56,102 @@ Table: Parameter values for MPL
 | DR(N)                | 0     | fmol/mg | MPL in the nucleus           |
 Table: Initial values for MPL
 
-The experiment followed rats for 7 days under constant infusion of the drug: 0.1 or 0.3 mg~drug~/kg~rat~/h.
-With this information, models can be created:
-```{r model}
-## Set the model data
-params <- c(
-        k.s_Rm = 2.90,
-        IC.50_Rm = 26.2,
-        k.on = 0.00329,
-        k.T = 0.63,
-        k.re = 0.57,
-        R.f = 0.49,
-        k.d_R = 0.0572,
-        k.d_Rm = 0.612,
-        k.s_R = 3.22,
-        D = 0
-)
+\newpage
 
-state <- c(
-        R.m0 = 4.74,
-        R.0 = 267,
-        DR = 0,
-        DRN = 0
-)
-
-times <- seq(0, 168, by = 1)
-
-## Model function
+To create the plots for the model, functions can be used:
+```{r create-functions-a1}
+## Model
 grd_model <- function(t, y, parms){
   with(as.list(c(parms, y)),{
-    delta.mRNA_R <- k.s_Rm * (1 - ( DRN / (IC.50_Rm + DRN) ) ) - k.d_Rm * R.m0
-    delta.R <- k.s_R * R.m0 + R.f * k.re * DRN - k.on * D * R.0 - k.d_R * R.0
+    delta.R.m0 <- k.s_Rm * (1 - ( DRN / (IC.50_Rm + DRN) ) ) - k.d_Rm * R.m0
+    delta.R.0 <- k.s_R * R.m0 + R.f * k.re * DRN - k.on * D * R.0 - k.d_R * R.0
     delta.DR <- k.on * D * R.0 - k.T * DR
     delta.DRN <- k.T * DR - k.re * DRN
-    return( list( c(delta.mRNA_R, delta.R, delta.DR, delta.DRN ) ) )
+    return( list( c(delta.R.m0, delta.R.0, delta.DR, delta.DRN ) ) )
   })
 }
 
-## Create the models with the different medians
-params$D <- calc.D( median(MPL_data$MPL_conc[MPL_data$dose==0.1], na.rm=T) )
-model_01 <- ode(times = times, y = state,
-                 parms = params, func = grd_model, method = "euler")
-model_01 <- as.data.frame(model_01)
+## Data frame with the different units and titles of the data
+data.values <- data.frame(
+        name = c("R.m0", "R.0", "DR", "DRN"),
+        ylabel = c("mRNA", "Free receptor", "Receptor complex", "Receptor complex"),
+        unit = c("(fmol/g)", "(fmol/mg)", "(fmol/mg)", "(fmol/mg)"),
+        title = c("mRNA", "Free receptor", "Receptor complex (cytosol)",
+                   "Receptor complex (nucleus)") )
+rownames(data.values) <- data.values$name
 
-params$D <- calc.D( median(MPL_data$MPL_conc[MPL_data$dose==0.3], na.rm=T) )
-model_03 <- ode(times = times, y = state,
-                 parms = params, func = grd_model, method = "euler")
-model_03 <- as.data.frame(model_03)
+## Function that calculates D
+calc.D <- function(dose){
+  return( (dose * 1000)/374.471 )
+}
+
+## Function to create a plot depending on wanted data
+create.plot1 <- function(plot.value, simulation, median.data, model.data){
+  # y.val inserts the plot.value for the corresponding row of data.values
+  y.val <- data.values[plot.value,]
+  # The plot
+  plt <- ggplot(data = simulation, mapping = aes(x = time, y = !!sym(y.val$name) ) ) +
+            # Points and lines
+            geom_point(size = 1, shape = 1, aes(color = "Experiment") ) +
+            geom_line(data = median.data, aes(color = "Median")) +
+            geom_line(data = model.data, aes(color = "Model")) +
+            # Labels
+            labs(x = "Time", y = paste(y.val$ylabel, y.val$unit), title = y.val$title) +
+            theme(legend.position = "bottom") +
+            # Legend data
+            scale_colour_manual(values = c("black", "red", "black"),
+                                limits = c("Experiment", "Median", "Model") ) +
+            # Legend correction
+            guides(color = guide_legend(title = "",
+                                        override.aes = list(linetype = c(1, 1, NA),
+                                                            shape = c(NA, NA, 1)) ) )
+  return(plt)
+}
+
+## Function arranges plots and legend
+arrange.plots <- function(plots, title){
+  my.grid <- ggarrange(plotlist = plots, ncol = 2, nrow = length(plots)/2,
+                       common.legend = TRUE, legend = "bottom")
+  print( annotate_figure(my.grid, top = text_grob(title) ) )
+}
+
+## Function joins other functions with data
+main <- function(dose){
+  # Change D depending on dose
+  params$D <- calc.D(dose)
+  # The different datas
+  simulation <- subset(MPL_data, MPL_data$dose == 0 | MPL_data$dose == dose)
+  median.data <- subset(medians, medians$dose == 0 | medians$dose == dose)
+  # Run the model
+  model.data <- as.data.frame( ode(times = times, y = state, parms = params,
+                                   func = grd_model, method = "euler"))
+  # Create the plots
+  plots <- lapply(c("R.m0", "R.0"), create.plot1, simulation, median.data, model.data)
+  # Arrange the plots
+  arrange.plots(plots, sprintf("Graphs for %s mg drug", dose))
+}
 ```
 
-Visualizing these models give the following:
-```{r plot}
-ggplot(data = data_01, mapping = aes(x = time, y = R.m0)) +
-        geom_point(size = 1, shape = 1, aes(color = "Experiment") ) +
-        geom_line(data = median_01, aes(color = "Median")) +
-        geom_line(data = model_01, aes(color = "Model")) +
-labs(x = "Time", y = expression("mRNA"["R"]*" (fmol/g)"),
-             title = expression("mRNA"["R"]*" concentration of dose 0.1") ) +
-        theme(legend.position = "bottom") +
-        scale_colour_manual(values = c("black", "red", "black"),
-                            limits = c("Experiment", "Median", "Model") ) +
-        guides(color = guide_legend(title = "",
-                                    override.aes = list(linetype = c(1, 1, NA),
-                                                        shape = c(NA, NA, 1)) ) )
+\newpage
 
-ggplot(data = data_03, mapping = aes(x = time, y = R.m0)) +
-        geom_point(size = 1, shape = 1, aes(color = "Experiment") ) +
-        geom_line(data = median_03, aes(color = "Median")) +
-        geom_line(data = model_03, aes(color = "Model")) +
-labs(x = "Time", y = expression("mRNA"["R"]*" (fmol/g)"),
-             title = expression("mRNA"["R"]*" concentration of dose 0.3") ) +
-        theme(legend.position = "bottom") +
-        scale_colour_manual(values = c("black", "red", "black"),
-                            limits = c("Experiment", "Median", "Model") ) +
-        guides(color = guide_legend(title = "",
-                                    override.aes = list(linetype = c(1, 1, NA),
-                                                        shape = c(NA, NA, 1)) ) )
+The experiment followed rats for 7 days under constant infusion of the drug: 0.1 or 0.3 mg~drug~/kg~rat~/h.
+With this information, models can be created:
+```{r model, fig.height = 3}
+## Set the data for the model
+params <- c(k.s_Rm = 2.90, IC.50_Rm = 26.2, k.on = 0.00329, k.T = 0.63, k.re = 0.57,
+            R.f = 0.49, k.d_R = 0.0572, k.d_Rm = 0.612, k.s_R = 3.22, D = 0)
 
-ggplot(data = data_01, mapping = aes(x = time, y = R.0)) +
-        geom_point(size = 1, shape = 1, aes(color = "Experiment") ) +
-        geom_line(data = median_01, aes(color = "Median")) +
-        geom_line(data = model_01, aes(color = "Model")) +
-        labs(x = "Time", y = "Free receptor concentration (fmol/mg)",
-             title = "Free receptor concentration of dose 0.1") +
-        theme(legend.position = "bottom") +
-        scale_colour_manual(values = c("black", "red", "black"),
-                            limits = c("Experiment", "Median", "Model") ) +
-        guides(color = guide_legend(title = "",
-                                    override.aes = list(linetype = c(1, 1, NA),
-                                                        shape = c(NA, NA, 1)) ) )
+state <- c(R.m0 = 4.74, R.0 = 267, DR = 0, DRN = 0)
 
-ggplot(data = data_03, mapping = aes(x = time, y = R.0)) +
-        geom_point(size = 1, shape = 1, aes(color = "Experiment") ) +
-        geom_line(data = median_03, aes(color = "Median")) +
-        geom_line(data = model_03, aes(color = "Model")) +
-        labs(x = "Time", y = "Free receptor concentration (fmol/mg)",
-             title = "Free receptor concentration of dose 0.3") +
-        theme(legend.position = "bottom") +
-        scale_colour_manual(values = c("black", "red", "black"),
-                            limits = c("Experiment", "Median", "Model") ) +
-        guides(color = guide_legend(title = "",
-                                    override.aes = list(linetype = c(1, 1, NA),
-                                                        shape = c(NA, NA, 1)) ) )
+times <- seq(0, 168, by = 1)
+
+## Check the doses
+doses <- unique(MPL_data$dose)
+doses <- doses[!doses == 0]
+sapply(doses, main)
 ```
+
+\newpage
 
 ## Questions
 
@@ -184,13 +167,14 @@ ggplot(data = data_03, mapping = aes(x = time, y = R.0)) +
 
 > Yes, to some extent. The values that the experiment and the model end on is similar, but the values between the start and the end fluctuate a bit. The graphs of the free receptor concentration show that the experimental data conform with the model. In the mRNA graphs, there are some deviations from the model around Time = 25.
 
-# Assignment 2
+\newpage
 
+# Assignment 2
 ## No Auto-Regulation Glucocorticoid Receptor
 
-```{r nodrugs}
+```{r nodrugs, fig.height = 3}
 ## Create function for no drugs
-receptor_noDrugs <- function(t, y, parms){
+receptor.model <- function(t, y, parms){
   with(as.list(c(parms, y)),{
     delta.R.m0 <- -k.d_Rm * R.m0
     delta.R <- k.s_R * R.m0 + R.f * k.re * DRN - k.on * D * R.0 - k.d_R * R.0
@@ -198,6 +182,34 @@ receptor_noDrugs <- function(t, y, parms){
     delta.DRN <- k.T * DR - k.re * DRN
     return( list( c(delta.R.m0, delta.R, delta.DR, delta.DRN ) ) )
   })
+}
+
+changing.plots <- function(plot.value, ref.data, changed.data){
+  # Create colours for the different lines (except for reference)
+  colours <- hue_pal()(length(changed.data))
+  data.names <- names(changed.data)
+  # y.val inserts the plot.value for the corresponding row of data.values
+  y.val <- data.values[plot.value,]
+  # The plot
+  plt <- ggplot(data = ref.data, mapping = aes(x = time, y = !!sym(y.val$name) ) ) +
+           # Lines (reference data stays black)
+           geom_line(aes(color = "Ref")) +
+           unlist( mapply(function(single.data, data.name)
+                      geom_line(data = single.data, linetype = "dashed",
+                                aes(color = data.name ) ),
+                    changed.data, data.names ) ) +
+           # Labels
+           labs(x = "Time", y = paste(y.val$ylabel, y.val$unit), title = y.val$title) +
+           theme(legend.position = "bottom") +
+           # Legend data
+           scale_colour_manual(values = c("black", colours),
+                               limits = c("Ref", names(changed.data) ) ) +
+           # Legend correction
+           guides(color = guide_legend(
+                   title = "",
+                   override.aes = list(linetype = c(1, rep(2, length(changed.data)))))
+           )
+  return(plt)
 }
 
 ## The model with a dose of 20
@@ -208,64 +220,40 @@ model_20 <- as.data.frame(model_20)
 
 ## The model without drug influence
 model_noDrugs <- as.data.frame(ode(times = times, y = state,
-                 parms = params, func = receptor_noDrugs, method = "euler"))
+                 parms = params, func = receptor.model, method = "euler"))
 
-ggplot(data = MPL_data, mapping = aes(x = time, y = R.m0)) +
-        geom_line(data = model_noDrugs, linetype = "solid", aes(color = "No drugs")) +
-        geom_line(data = model_20, linetype = "solid", aes(color = "Model 20")) +
-        labs(x = "Time", y = expression("mRNA"["R"]*" (fmol/g)"),
-             title = expression("mRNA"["R"]*" concentration") ) +
-        scale_colour_manual(values = c("red", "blue"), limits = c("No drugs", "Model 20"))
+data.list <- list("No drugs" = model_noDrugs)
 
-ggplot(data = MPL_data, mapping = aes(x = time, y = R.0)) +
-        geom_line(data = model_noDrugs, linetype = "solid", aes(color = "No drugs")) +
-        geom_line(data = model_20, linetype = "solid", aes(color = "Model 20")) +
-        labs(x = "Time", y = "Free receptor concentration (fmol/mg)",
-             title = "Free receptor concentration") +
-        scale_colour_manual(values = c("red", "blue"), limits = c("No drugs", "Model 20"))
+plots <- lapply(c("R.m0", "R.0"), changing.plots, model_20, data.list)
+arrange.plots(plots, "No Glucocorticoid receptor Regulation")
 ```
 When the DR(N) has no influence on the mRNA~R~ synthesis, a big part of the first equation disappears: $k_{s_Rm}\cdot(1-\frac{DR(N)}{IC_{50_Rm}+DR(N)})$
 The figures show, when DR(N) has no influence on the mRNA~R~ synthesis, the mRNA~R~ concentration drops to zero fairly quickly and stays zero due to no mRNA~R~ synthesis.
 The blue line details the normal scenario in which the drug is working correctly with a dose of 20.
 
+\newpage
+
 ## Stopping drug treatment at Steady State
 
-```{r steady-state}
+```{r steady-model}
 ## Define new model
 steady_model <- function(t, y, parms){
   with(as.list(c(parms, y)),{
-    delta.mRNA_R <- k.s_Rm * (1 - ( DRN / (IC.50_Rm + DRN) ) ) - k.d_Rm * R.m0
-    delta.R <- k.s_R * R.m0 + R.f * k.re * DRN - k.on * D * R.0 - k.d_R * R.0
+    delta.R.m0 <- k.s_Rm * (1 - ( DRN / (IC.50_Rm + DRN) ) ) - k.d_Rm * R.m0
+    delta.R.0 <- k.s_R * R.m0 + R.f * k.re * DRN - k.on * D * R.0 - k.d_R * R.0
     delta.DR <- k.on * D * R.0 - k.T * DR
     delta.DRN <- k.T * DR - k.re * DRN
     delta.D <- 0
-    return( list( c(delta.mRNA_R, delta.R, delta.DR, delta.DRN, delta.D) ) )
+    return( list( c(delta.R.m0, delta.R.0, delta.DR, delta.DRN, delta.D) ) )
   })
 }
 
-## Parameters for the steady state model
-params_steady <- c(
-        k.s_Rm = 2.90,
-        IC.50_Rm = 26.2,
-        k.on = 0.00329,
-        k.T = 0.63,
-        k.re = 0.57,
-        R.f = 0.49,
-        k.d_R = 0.0572,
-        k.d_Rm = 0.612,
-        k.s_R = 3.22
-)
+params_steady <- c(k.s_Rm = 2.90, IC.50_Rm = 26.2, k.on = 0.00329, k.T = 0.63,
+                   k.re = 0.57, R.f = 0.49, k.d_R = 0.0572, k.d_Rm = 0.612, k.s_R = 3.22)
 
-## State parameters for steady state model
-state_steady <- c(
-        R.m0 = 4.74,
-        R.0 = 267,
-        DR = 0,
-        DRN = 0,
-        D = calc.D(20)
-)
+state_steady <- c(R.m0 = 4.74, R.0 = 267, DR = 0, DRN = 0, D = calc.D(20))
 
-## Create the event for the model (this will happen when steady state is found
+## Create the event for the model
 trigger <- function(t, y, params){
   y["D"] <- 0
   return(y)
@@ -280,236 +268,114 @@ root <- function (t, y, params){
   return(c(numb1, numb2))
 }
 
-## Create the model with the turnover
+## Run the model with the turnover
 steadys <- ode( times = times, y = state_steady, parms = params_steady,
                 func = steady_model, rootfun = root,
                 events = list(func = trigger, root = TRUE, terminalroot = 2) )
 
-## The step where steady state was found
-cat("Steady state at:", attributes(steadys)$troot)
-
+last.root <- attributes(steadys)$troot
 steadys <- as.data.frame(steadys)
 
-## Create plots
-ggplot(data = steadys, mapping = aes(x = time, y = R.m0)) +
-        geom_line(aes(color = "Turnover")) +
-        geom_line(data = model_20, aes(color = "Model 20")) +
-        labs(x = "Time", y = expression("mRNA"["R"]*" (fmol/g)"),
-             title = expression("mRNA"["R"]*" concentration") )
-
-ggplot(data = steadys, mapping = aes(x = time, y = R.0)) +
-        geom_line(aes(color = "Turnover")) +
-        geom_line(data = model_20, aes(color = "Model 20")) +
-        labs(x = "Time", y = "Free receptor concentration (fmol/mg)",
-             title = "Free receptor concentration")
-
-ggplot(data = steadys, mapping = aes(x = time, y = DR)) +
-        geom_line(aes(color = "Turnover")) +
-        geom_line(data = model_20, aes(color = "Model 20")) +
-        labs(x = "Time", y = "Receptor (fmol/mg)",
-             title = "Receptor complex in cytosol")
-
-ggplot(data = steadys, mapping = aes(x = time, y = DRN)) +
-        geom_line(aes(color = "Turnover")) +
-        geom_line(data = model_20, aes(color = "Model 20")) +
-        labs(x = "Time", y = "Receptor (fmol/mg)",
-             title = "Receptor complex in Nucleus")
-
+data.list <- list("Turnover" = steadys)
+plots <- lapply(c("R.m0", "R.0", "DR", "DRN"), changing.plots, model_20,data.list)
+arrange.plots(plots, expression("Turnover at steady state"))
 ```
+
+\newpage
 
 ## Changes in k~on~ and k~re~
 
-```{r kondiff, message = F}
-## Different times values due to conflict in results
-times <- seq(0, 48, by=0.01)
+```{r kondiff}
+times <- seq(0, 168, by = 0.1)
 
-state <- c(
-        R.m0 = 4.74,
-        R.0 = 267,
-        DR = 0,
-        DRN = 0
-)
+state <- c(R.m0 = 4.74, R.0 = 267, DR = 0, DRN = 0)
 
-params <- c(
-        k.s_Rm = 2.90,
-        IC.50_Rm = 26.2,
-        k.on = 0.00329,
-        k.T = 0.63,
-        k.re = 0.57,
-        R.f = 0.49,
-        k.d_R = 0.0572,
-        k.d_Rm = 0.612,
-        k.s_R = 3.22,
-        D = calc.D(20)
-)
+params <- c(k.s_Rm = 2.90, IC.50_Rm = 26.2, k.on = 0.00329, k.T = 0.63, k.re = 0.57,
+            R.f = 0.49, k.d_R = 0.0572, k.d_Rm = 0.612, k.s_R = 3.22, D = calc.D(20))
 
-group.cols <- hue_pal()(5)
-## Assign each colour for legibility
-colours <- c("5 less" = group.cols[1], "2 less" = group.cols[2],
-             "2 more" = group.cols[3], "5 more" = group.cols[4],
-             "ref" = group.cols[5])
+k.on_models <- list("k/5" = 0.0039/5,
+                    "k/2" = 0.0039/2,
+                    "k*2" = 0.0039*2,
+                    "k*5" = 0.0039*5)
 
-model_k.on_ref <- as.data.frame(ode(times = times, y = state,
-                 parms = params, func = grd_model, method = "euler"))
+for (i in seq_along(k.on_models)){
+  params$k.on <- k.on_models[[i]]
+  k.on_models[[i]] <- as.data.frame(ode(times = times, y = state, parms = params,
+                                        func = grd_model, method = "euler"))
+}
 
-params$k.on <- 0.0039/5
-
-model_k.on_min5 <- as.data.frame(ode(times = times, y = state,
-                 parms = params, func = grd_model, method = "euler"))
-
-params$k.on <- 0.0039/2
-
-model_k.on_min2 <- as.data.frame(ode(times = times, y = state,
-                 parms = params, func = grd_model, method = "euler"))
-
-params$k.on <- 0.0039*2
-
-model_k.on_plus2 <- as.data.frame(ode(times = times, y = state,
-                 parms = params, func = grd_model, method = "euler"))
-
-params$k.on <- 0.0039*5
-
-model_k.on_plus5 <- as.data.frame(ode(times = times, y = state,
-                 parms = params, func = grd_model, method = "euler"))
-
-ggplot(mapping = aes(x = time, y = R.m0)) +
-        geom_line(data = model_k.on_ref, linetype = "dashed", aes(color = "ref")) +
-        geom_line(data = model_k.on_min5, aes(color = "5 less")) +
-        geom_line(data = model_k.on_min2, aes(color = "2 less")) +
-        geom_line(data = model_k.on_plus2, aes(color = "2 more")) +
-        geom_line(data = model_k.on_plus5, aes(color = "5 more")) +
-        labs(x = "Time", y = "mRNA (fmol/g)", title = "mRNA over time") +
-        theme(legend.position = "bottom") +
-        scale_colour_manual(name = "", values = group.cols,
-                            limits = names(colours)) +
-        guides(color = guide_legend(title = "",
-                                    override.aes = list(linetype = c(2, 1, 1, 1, 1) ) ) )
-
-ggplot(mapping = aes(x = time, y = R.0)) +
-        geom_line(data = model_k.on_ref, linetype = "dashed", aes(color = "ref")) +
-        geom_line(data = model_k.on_min5, aes(color = "5 less")) +
-        geom_line(data = model_k.on_min2, aes(color = "2 less")) +
-        geom_line(data = model_k.on_plus2, aes(color = "2 more")) +
-        geom_line(data = model_k.on_plus5, aes(color = "5 more")) +
-        labs(x = "Time", y = "Free receptor concentration (fmol/mg)",
-             title = "Free receptor concentration over time") +
-        theme(legend.position = "bottom") +
-        scale_colour_manual(name = "", values = group.cols,
-                            limits = names(colours)) +
-        guides(color = guide_legend(title = "",
-                                    override.aes = list(linetype = c(2, 1, 1, 1, 1) ) ) )
+plots <- lapply(c("R.m0", "R.0", "DR", "DRN"), changing.plots, model_20, k.on_models)
+arrange.plots(plots, expression("Different k"["on"]*" values"))
 ```
 
-```{r krediff, eval = F}
-model_k.re_ref <- as.data.frame(ode(times = times, y = state,
-                 parms = params, func = grd_model, method = "euler"))
+\newpage
 
-params$k.re <- 0.57/5
+```{r krediff}
+k.re_models <- list("k/5" = 0.57/5,
+                    "k/2" = 0.57/2,
+                    "k*2" = 0.57*2,
+                    "k*5" = 0.57*5)
 
-model_k.re_min5 <- as.data.frame(ode(times = times, y = state,
-                 parms = params, func = grd_model, method = "euler"))
+for (i in seq_along(k.re_models)){
+  params$k.re <- k.re_models[[i]]
+  k.re_models[[i]] <- as.data.frame(ode(times = times, y = state, parms = params,
+                                        func = grd_model, method = "euler"))
+}
 
-params$k.re <- 0.57/2
-
-model_k.re_min2 <- as.data.frame(ode(times = times, y = state,
-                 parms = params, func = grd_model, method = "euler"))
-
-params$k.re <- 0.57*2
-
-model_k.re_plus2 <- as.data.frame(ode(times = times, y = state,
-                 parms = params, func = grd_model, method = "euler"))
-
-params$k.re <- 0.57*5
-
-model_k.re_plus5 <- as.data.frame(ode(times = times, y = state,
-                 parms = params, func = grd_model, method = "euler"))
-
-ggplot(data = model_k.re_ref, mapping = aes(x = time, y = R.m0)) +
-        geom_line(linetype = "dashed", aes(color = "ref")) +
-        geom_line(data = model_k.re_min5, aes(color = "5 less")) +
-        geom_line(data = model_k.re_min2, aes(color = "2 less")) +
-        geom_line(data = model_k.re_plus2, aes(color = "2 more")) +
-        geom_line(data = model_k.re_plus5, aes(color = "5 more")) +
-        labs(x = "Time", y = "mRNA (fmol/g)", title = "mRNA over time") +
-        theme(legend.position = "bottom") +
-        scale_colour_manual(name = "", values = group.cols,
-                            limits = names(colours)) +
-        guides(color = guide_legend(title = "",
-                                    override.aes = list(linetype = c(2, 1, 1, 1, 1) ) ) )
-
-ggplot(data = model_k.re_ref, mapping = aes(x = time, y = R.0)) +
-        geom_line(linetype = "dashed", aes(color = "ref")) +
-        geom_line(data = model_k.re_min5, aes(color = "5 less")) +
-        geom_line(data = model_k.re_min2, aes(color = "2 less")) +
-        geom_line(data = model_k.re_plus2, aes(color = "2 more")) +
-        geom_line(data = model_k.re_plus5, aes(color = "5 more")) +
-        labs(x = "Time", y = "Free receptor concentration (fmol/mg)",
-             title = "Free receptor concentration over time") +
-        theme(legend.position = "bottom") +
-        scale_colour_manual(name = "", values = group.cols,
-                            limits = names(colours)) +
-        guides(color = guide_legend(title = "",
-                                    override.aes = list(linetype = c(2, 1, 1, 1, 1) ) ) )
+plots <- lapply(c("R.m0", "R.0", "DR", "DRN"), changing.plots, model_20, k.re_models)
+arrange.plots(plots, expression("Different k"["re"]*" values"))
 ```
+
+\newpage
 
 ## Block Synthesis of Receptor
-
-To simulate this situation, k~s_R~, R~f~ and k~re~ need to be put to zero.
+To simulate this situation, k~s_R~ needs to be put to zero and R~f~ and k~re~ should output no influence on \Delta R. This changes the model a bit:
 
 ```{r receptor_block}
-params <- c(
-        k.s_Rm = 2.90,
-        IC.50_Rm = 26.2,
-        k.on = 0.00329,
-        k.T = 0.63,
-        k.re = 0,
-        R.f = 0,
-        k.d_R = 0.0572,
-        k.d_Rm = 0.612,
-        k.s_R = 0,
-        D = calc.D(20)
-)
+block_model <- function(t, y, parms){
+  with(as.list(c(parms, y)),{
+    delta.R.m0 <- k.s_Rm * (1 - ( DRN / (IC.50_Rm + DRN) ) ) - k.d_Rm * R.m0
+    delta.R.0 <- k.s_R * R.m0 - k.on * D * R.0 - k.d_R * R.0
+    delta.DR <- k.on * D * R.0 - k.T * DR
+    delta.DRN <- k.T * DR - k.re * DRN
+    return( list( c(delta.R.m0, delta.R.0, delta.DR, delta.DRN ) ) )
+  })
+}
 
-state <- c(
-        R.m0 = 4.74,
-        R.0 = 267,
-        DR = 0,
-        DRN = 0
-)
+params <- c(k.s_Rm = 2.90, IC.50_Rm = 26.2, k.on = 0.00329, k.T = 0.63, k.re = 0.57,
+            R.f = 0.49, k.d_R = 0.0572, k.d_Rm = 0.612, k.s_R = 0, D = calc.D(20))
+state <- c(R.m0 = 4.74, R.0 = 267, DR = 0, DRN = 0)
 times <- seq(0, 168, by = 1)
+
 no.Receptor <- as.data.frame(ode(times = times, y = state, parms = params,
-                                 func = grd_model, method = "euler"))
+                                 func = block_model, method = "euler"))
 
-ggplot(data = no.Receptor, mapping = aes(x = time, y = R.m0)) +
-        geom_line(aes(color = "No receptor")) +
-        geom_line(data = model_20, aes(color = "Model 20")) +
-        labs(x = "mRNA (fmol/g)", y = "Time", title = "No receptor synthesis (mRNA)") +
-        scale_colour_manual(name = "", values = c("black", "red"),
-                            limits = c("No receptor", "Model 20"))
-
-ggplot(data = no.Receptor, mapping = aes(x = time, y = R.0)) +
-        geom_line(aes(color = "No receptor")) +
-        geom_line(data = model_20, aes(color = "Model 20")) +
-        labs(x = "Free receptor concentration (fmol/mg)", y = "Time",
-             title = "No receptor synthesis (Free receptor)") +
-        scale_colour_manual(name = "", values = c("black", "red"),
-                            limits = c("No receptor", "Model 20"))
-
-ggplot(data = no.Receptor, mapping = aes(x = time, y = DR)) +
-        geom_line(aes(color = "No receptor")) +
-        geom_line(data = model_20, aes(color = "Model 20")) +
-        labs(x = "DR (fmol/mg)", y = "Time", title = "No receptor synthesis (DR)") +
-        scale_colour_manual(name = "", values = c("black", "red"),
-                            limits = c("No receptor", "Model 20"))
-
-ggplot(data = no.Receptor, mapping = aes(x = time, y = DRN)) +
-        geom_line(aes(color = "No receptor")) +
-        geom_line(data = model_20, aes(color = "Model 20")) +
-        labs(x = "MPL concentration (fmol/mg)", y = "Time",
-             title = "No receptor synthesis (MPL concentration)") +
-        scale_colour_manual(name = "", values = c("black", "red"),
-                            limits = c("No receptor", "Model 20"))
+data.list <- list("No receptor" = no.Receptor)
+plots <- lapply(c("R.m0", "R.0", "DR", "DRN"), changing.plots, model_20, data.list)
+arrange.plots(plots, expression("No receptor synthesis"))
 ```
 
+\newpage
+
 ## Increased and decreased baseline mRNA production
-same as kon kre chunks
+```{r baseline-change}
+params <- c(k.s_Rm = 2.90, IC.50_Rm = 26.2, k.on = 0.00329, k.T = 0.63, k.re = 0.57,
+            R.f = 0.49, k.d_R = 0.0572, k.d_Rm = 0.612, k.s_R = 0, D = calc.D(20))
+state <- c(R.m0 = 4.74, R.0 = 267, DR = 0, DRN = 0)
+times <- seq(0, 168, by = 0.1)
+
+k.models <- list("k/5" = 2.9/5,
+                 "k/2" = 2.9/2,
+                 "k*2" = 2.9*2,
+                 "k*5" = 2.9*5)
+
+for (i in seq_along(k.models)){
+  params$k.s_Rm <- k.models[[i]]
+  params$k.d_Rm <- k.models[[i]]/4.74
+  k.models[[i]] <- as.data.frame(ode(times = times, y = state, parms = params,
+                                     func = grd_model, method = "euler"))
+}
+
+plots <- lapply(c("R.m0", "R.0", "DR", "DRN"), changing.plots, model_20, k.models)
+arrange.plots(plots, expression("Different k"["s_Rm"]*" and k"["d_Rm"]*" values"))
+```
