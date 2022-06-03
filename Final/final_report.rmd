@@ -1,13 +1,11 @@
 ---
-title: Final project
-author: Lisa Hu, Niek Scholten
+title: "&nbsp;"
+author: "&nbsp;"
 output:
   pdf_document:
     includes:
-      before_body: title.sty
-    toc: true
-    toc_depth: 2
-    latex_engine: xelatex
+      before_body: title.tex
+      in_header: header.tex
 ---
 ```{r setup, include = FALSE, warning = FALSE, message = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -15,12 +13,14 @@ knitr::opts_chunk$set(cache = TRUE)
 knitr::opts_chunk$set(warning = FALSE)
 knitr::opts_chunk$set(message = FALSE)
 knitr::opts_chunk$set(error = FALSE)
+
 source('functions.R', local = knitr::knit_global())
+scripts <- c("functions.R", "results1.R", "results2.R")
+invisible(lapply(scripts, knitr::read_chunk))
 
 packages <- c("deSolve", "ggplot2", "formatR", "scales")
 invisible(lapply(packages, library, character.only = T))
 ```
-\newpage
 \pagenumbering{arabic}
 
 # Abstract
