@@ -1,8 +1,12 @@
 ---
-title: Detailed Analysis
+title: Final project
 author: Lisa Hu, Niek Scholten
 output:
   pdf_document:
+    includes:
+      before_body: title.sty
+    toc: true
+    toc_depth: 2
     latex_engine: xelatex
 ---
 ```{r setup, include = FALSE, warning = FALSE, message = FALSE}
@@ -11,39 +15,21 @@ knitr::opts_chunk$set(cache = TRUE)
 knitr::opts_chunk$set(warning = FALSE)
 knitr::opts_chunk$set(message = FALSE)
 knitr::opts_chunk$set(error = FALSE)
+source('functions.R', local = knitr::knit_global())
 
 packages <- c("deSolve", "ggplot2", "formatR", "scales")
 invisible(lapply(packages, library, character.only = T))
 ```
-```{r model}
+\newpage
+\pagenumbering{arabic}
 
-parameters <- c(
-  q = 0.5, # Accumulated energy constant
-  r = 0.043, # Fruit trees intrinsic growth rate
-  N = 3000, # Fruit carrying capacity
-  I = 1, # Irrigation water amount
-  B = 0.06, # Evapotranspiration rate
-  v = 0.001, # Photosynthetic contribution rate
-  w = 0.00001 # Mortality rate of fruit trees,
-)
+# Abstract
 
-state <- c(
-  W = 0.6,
-  C = 1
-)
 
-times <- seq(0, 120, by = 1)
+# Introduction
 
-growth <- function(t, y, parms){
-  with(as.list(c(parms, y)),{
-    W <- (-B * q * W - r * C * (1 -((C) / N)) * W)
-    C <- r * C * (1 - ((C) / N)) * W + ((v * q * C * W) / ((C + 1) * (W + 1))) - w * C
-    return( list( c(W, C) ) )
-  })
-}
 
-trees_growth <- as.data.frame(ode(times = times, y = state,
-                 parms = parameters, func = growth, method = "euler"))
+# Test runs
+```{r test, file='results1.R'}
 
-plot(C ~ time, data = trees_growth)
 ```
