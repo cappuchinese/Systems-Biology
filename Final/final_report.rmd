@@ -1,35 +1,33 @@
 ---
-title: "&nbsp;"
-author: "&nbsp;"
 output:
   pdf_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
     includes:
       before_body: title.tex
       in_header: header.tex
+bibliography: references.bib
 ---
 ```{r setup, include = FALSE, warning = FALSE, message = FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(cache = TRUE)
 knitr::opts_chunk$set(warning = FALSE)
 knitr::opts_chunk$set(message = FALSE)
 knitr::opts_chunk$set(error = FALSE)
 
+BOSS_MODE <- TRUE
 source('functions.R', local = knitr::knit_global())
 scripts <- c("functions.R", "results1.R", "results2.R")
 invisible(lapply(scripts, knitr::read_chunk))
 
-packages <- c("deSolve", "ggplot2", "formatR", "scales")
+packages <- c("deSolve", "ggplot2", "formatR", "scales", "ggpubr")
 invisible(lapply(packages, library, character.only = T))
 ```
 \pagenumbering{arabic}
+\newpage
 
-# Abstract
+# Abstract {-}
 
 
 # Introduction
-
-
-# Test runs
-```{r test, file='results1.R'}
-
-```
