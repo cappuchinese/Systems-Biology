@@ -11,7 +11,8 @@
 ## ---------------------------
 
 ## ODE values
-parameters <- c(q = 0.5, r = 0.043, N = 3000, I = 1, B = 0.06, g = 0.001, o = 0.00001)
+parameters <- c(q = 0.5, r = 0.043, N = 3000, I = 1,
+                B = 0.06, g = 0.001, o = 0.00001, time = 8)
 state <- c(W = 0.6, C = 1)
 times <- seq(0, 120, by = 1)
 
@@ -34,8 +35,11 @@ for(i in seq_along(q.values)){
                                      parms = parameters, func = model, method = "euler"))
 }
 
+parameters <- c(q = 0.5, r = 0.043, N = 3000, I = 1,
+                B = 0.06, g = 0.001, o = 0.00001, time = 16)
+
 delay.data <- as.data.frame(ode(times = times, y = state, parms = parameters,
-                                func = delay.model, method = "euler"))
+                                func = model, method = "euler"))
 delay.data <- list("Delayed water irrigation" = delay.data)
 
 
@@ -59,4 +63,6 @@ for(i in seq_along(plot.list)){
   plot.list[[i]] <- plot.list[[i]] + labs(tag = plot.tags[i])
 }
 
-arrange.plots(plots = plot.list, title = "Plots of the paper")
+my.grid <- ggarrange(plotlist = plot.list, ncol = 2, nrow = 2,
+                     common.legend = FALSE, legend = "bottom")
+print( annotate_figure(my.grid, top = text_grob("Plots of the paper") ) )

@@ -11,10 +11,9 @@
 ## ---------------------------
 
 ## ---- basic-model
-#' Basic model
 model <- function(t, y, parms){
-  # Add water every 8 days, until day 80
-  if(t %% 8 == 0 && t < 80 && t > 0){
+  # Add water every given days, until day 80
+  if(t %% as.numeric(parms["time"]) == 0 && t < 80 && t > 0){
     with(as.list(c(parms, y)), {
       dW <- I # I is the water irrigation
       dC <- 0 # There is no growth on those days
@@ -31,44 +30,47 @@ model <- function(t, y, parms){
   }
 }
 
-## ---- delayWater-model
-#' Model for delayed water irrigation
-delay.model <- function(t, y, parms){
-  # Add water every 16 days, until day 80
-    if(t %% 16 == 0 && t < 80 && t > 0){
-    with(as.list(c(parms, y)), {
-      dW <- I # I is the water irrigation
-      dC <- 0 # There is no growth on those days
-      return( list( c(dW, dC) ) )
-    })
-  }
-  # Else the model runs with the equations
-  else{
-    with(as.list(c(parms, y)),{
-      dW <- (-B * q * W) - (r * C * (1 - ( C/N ) ) * W)
-      dC <- (r * C * (1 - ( C/N ) ) * W) + ( (g*q*C*W)/(C+1)*(W+1) ) - o * C
-      return( list( c(dW, dC) ) )
-    })
-  }
-}
-
+## ---- Day-night model
 day.night_model <- function(t, y, parms){
-  # Add water every 8 days, until day 80
-  if(t %% 8 == 0 && t < 80 && t > 0){
-    with(as.list(c(parms, y)), {
-      dW <- I # I is the water irrigation
+  # Add water every given days, until day 80
+  if(t %% as.numeric(parms["time"]) == 0 && t < 80 && t > 0){
+    with( as.list( c(parms, y)), {
+      dW <- I * 24 # I is the water irrigation
+      # NOTE : x24 because the water amount should not change
       dC <- 0 # There is no growth on those days
       return( list( c(dW, dC) ) )
     })
   }
   # Else the model runs with the equations
   else{
-    with(as.list(c(parms, y)),{
-      dW <- (-B * q * W) - (r * C * (1 - ( C/N ) ) * W) * (1/24)
-      dC <- (r * C * (1 - ( C/N ) ) * W) + ( (g*q*C*W)/(C+1)*(W+1) ) - o * C * (1/24)
+    if(t %% 1 <= 0.25 | t %% 1 >= 0.83){
+      # During the night (no sun)
+      with( as.list (c(parms, y)), {
+        dW <- ((-B * q * W) - (r * C * (1 - ( C/N ) ) * W)) # Normal water drop
+        dC <- 0 # No growth
+        return( list( c(dW, dC) ) )
+        })
+    }
+    else{
+      # During the day (sun)
+      with( as.list( c(parms, y)),{
+      dW <- ((-B * q * W) - (r * C * (1 - ( C/N ) ) * W))
+      dC <- ((r * C * (1 - ( C/N ) ) * W) + ( (g*q*C*W)/(C+1)*(W+1) ) - o * C)
       return( list( c(dW, dC) ) )
-    })
+      })
+    }
   }
+}
+
+## ---- water-model
+water_model <- function(t, y, parms){
+  # Add water every given days, until day 80
+  with(as.list(c(parms, y)),{
+    dW <- (-B * q * W) - (r * C * (1 - ( C/N ) ) * W)
+    dC <- (r * C * (1 - ( C/N ) ) * W) + ( (g*q*C*W)/(C+1)*(W+1) ) - o * C
+    dI <- 0
+    return( list( c(dW, dC, dI) ) )
+  })
 }
 
 ## Function to create plots
@@ -96,13 +98,12 @@ create.plots <- function(plot.values, ref.data, change.data){
                         limits = c("Reference", names(change.data) ) ) +
     # Legend correction
     guides(color = guide_legend(title = ""))
-  print(plt)
   return(plt)
 }
 
 ## Function that arranges plots
-arrange.plots <- function(plots, title){
+arrange.plots <- function(plots, title, common){
   my.grid <- ggarrange(plotlist = plots, ncol = 2, nrow = length(plots)/2,
-                       common.legend = FALSE, legend = "bottom")
+                       common.legend = common, legend = "bottom")
   print( annotate_figure(my.grid, top = text_grob(title) ) )
 }
