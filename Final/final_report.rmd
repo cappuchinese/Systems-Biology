@@ -32,7 +32,7 @@ invisible(lapply(packages, library, character.only = T))
 \pagenumbering{arabic}
 # Introduction
 ## Purpose
-The effects of climate change are an existential threat to the planet earth.
+The effects of climate change are an existential threat to planet earth.
 This paper's purpose is to reproduce and expand on the research done by E Duque-Marin to get a further understanding of the dynamics and different scenarios of fruit tree growth, and by extension shed light on a part of this humongous problem that is already cropping up around the world.
 
 ## Theory
@@ -93,9 +93,9 @@ The differential equations were translated into a mathematical model that deSolv
 The last two equations also needed to be incorporated, this was done through if/else statements. After which several tests were run to ensure parity with the described model in the paper. File: [results1](results1.R).
 
 After this, the model was updated to use 1h steps instead of 1 day.
-This lead to the model being adapted to incorporate different growth rates for day and night, for even more precise date. File: [results2](results2.R).
+This lead to the model being adapted to incorporate different growth rates for day and night, for even more precise data. File: [results2](results2.R).
 
-Another few models were made to compare different irrigation intervals, as well as a model to water the soil as soon as almost all water was drained from it. Files: [results3](results3.R) \& [results4](results4.R).
+Another few models were made to compare different irrigation intervals, as well as a model for watering the soil as soon as almost all water was drained from it. Files: [results3](results3.R) \& [results4](results4.R).
 
 
 
