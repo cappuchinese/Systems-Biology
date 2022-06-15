@@ -7,7 +7,6 @@ output:
     includes:
       before_body: title.tex
       in_header: header.tex
-bibliography: references.bib
 ---
 ```{r setup, include = FALSE, warning = FALSE, message = FALSE}
 knitr::opts_chunk$set(echo = FALSE)
@@ -32,14 +31,50 @@ invisible(lapply(packages, library, character.only = T))
 [//]: # (Page 5: Introduction)
 \pagenumbering{arabic}
 # Introduction
+## Purpose
 
+
+## Theory
+For use in the simulations, 2 differential equations were obtained from *E Duque-Marín et al 2022 J. Phys.: Conf. Ser. 2153 012018*. Their accompanying parameters are listed below.
+
+
+| **Parameter** | **Meaning**                       |
+|---------------|-----------------------------------|
+| $q$           | Accumulated energy constant       |
+| $r$           | Fruit trees intrinsic growth rate |
+| $N$           | Fruit carrying capacity           |
+| $I$           | Irrigation water amount           |
+| $\beta$       | Evapotranspiration rate           |
+| $\gamma$      | Photosynthetic contribution rate  |
+| $\omega$      | Mortality rate of fruit trees     |
+
+$$Equations:$$
+$$ W'(t) = -\beta qW(t) - rC(t)(1 - \frac{C(t)}{N} W(t) $$
+$$ C'(t) = rC(t)(1 - \frac{C(t)}{N})W(t) + \frac{\gamma qC(t)W(t)}{(C+1)(W+1)}-\omega C(1) \qquad t \ne nT $$
+$$ \Delta W(nT) = I $$
+$$ \Delta C(nT) = 0 \qquad t = nT $$
+
+These equations come forth from a plethora of different papers, all of these are listed in *E Duque-Marín et al 2021 J. Phys.: Conf. Ser. 2046 012017*, the paper which proves these equations.
 
 \newpage
 
 [//]: # (Page : Materials & methods)
 # Materials and Methods
-## Materials
 
+## Materials
+The simulation data was obtained using the ODE (ordinary differential equation) function of deSolve.
+This function takes differential equations and parameters and calculates the output of these functions.
+Aforementioned equations can ben found in the theory section.
+Other packages like ggplot2, ggpubr, formatR and scales were used in data visualisation.
+
+| **Software** | **Package** | **Version** |
+|--------------|-------------|-------------|
+| R            |             | 4.0.4       |
+|              | deSolve     | 1.32        |
+|              | formatR     | 1.11.1      |
+|              | ggplot2     | 3.3.5       |
+|              | ggpubr      | 0.4.0       |
+|              | scales      | 1.1.1       |
 
 ## Methods
 
@@ -48,6 +83,14 @@ invisible(lapply(packages, library, character.only = T))
 
 [//]: # (Page : Results)
 # Results
+```{r res1, file = 'results1.R'}
+```
+```{r res2, file = 'results2.R'}
+```
+```{r res3, file = 'results3.R'}
+```
+```{r res4, file = 'results4.R'}
+```
 
 
 \newpage
@@ -66,12 +109,12 @@ invisible(lapply(packages, library, character.only = T))
 
 [//]: # (Page : References)
 # References
-```{r references, child = 'references.Rmd'}
+```{r references, child = 'references.rmd'}
 ```
 
 \newpage
 
 [//]: # (Page : Appendix)
 # Appendix
-```{r appendix, child = 'appendix.Rmd'}
+```{r appendix, child = 'appendix.rmd'}
 ```
