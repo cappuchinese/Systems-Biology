@@ -32,7 +32,8 @@ invisible(lapply(packages, library, character.only = T))
 \pagenumbering{arabic}
 # Introduction
 ## Purpose
-
+The effects of climate change are an existential threat to the planet earth.
+This paper's purpose is to reproduce and expand on the research done by E Duque-Marin to get a further understanding of the dynamics and different scenarios of fruit tree growth, and by extension shed light on a part of this humongous problem that is already cropping up around the world.
 
 ## Theory
 For use in the simulations, 2 differential equations were obtained from *E Duque-Marín et al 2022 J. Phys.: Conf. Ser. 2153 012018*. Their accompanying parameters are listed below.
