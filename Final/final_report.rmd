@@ -24,10 +24,54 @@ invisible(lapply(scripts, knitr::read_chunk))
 packages <- c("deSolve", "ggplot2", "formatR", "scales", "ggpubr")
 invisible(lapply(packages, library, character.only = T))
 ```
-\pagenumbering{arabic}
+
+[//]: # (Page 4: Table of Contents)
+
 \newpage
 
-# Abstract {-}
-
-
+[//]: # (Page 5: Introduction)
+\pagenumbering{arabic}
 # Introduction
+
+
+\newpage
+
+[//]: # (Page : Materials & methods)
+# Materials and Methods
+## Materials
+
+
+## Methods
+
+
+\newpage
+
+[//]: # (Page : Results)
+# Results
+
+
+\newpage
+
+[//]: # (Page : Conclusion)
+# Conclusion
+
+
+\newpage
+
+[//]: # (Page : Discussion)
+# Discussion
+
+
+\newpage
+
+[//]: # (Page : References)
+# References
+```{r references, child = 'references.Rmd'}
+```
+
+\newpage
+
+[//]: # (Page : Appendix)
+# Appendix
+```{r appendix, child = 'appendix.Rmd'}
+```

@@ -21,7 +21,7 @@ model <- function(t, y, parms){
       return( list( c(dW, dC) ) )
     })
   }
-  # Else the model runs with the differentials
+  # Else the model runs with the equations
   else{
     with(as.list(c(parms, y)),{
       dW <- (-B * q * W) - (r * C * (1 - ( C/N ) ) * W)
@@ -42,7 +42,7 @@ delay.model <- function(t, y, parms){
       return( list( c(dW, dC) ) )
     })
   }
-  # Else the model runs with the differentials
+  # Else the model runs with the equations
   else{
     with(as.list(c(parms, y)),{
       dW <- (-B * q * W) - (r * C * (1 - ( C/N ) ) * W)
@@ -52,6 +52,24 @@ delay.model <- function(t, y, parms){
   }
 }
 
+day.night_model <- function(t, y, parms){
+  # Add water every 8 days, until day 80
+  if(t %% 8 == 0 && t < 80 && t > 0){
+    with(as.list(c(parms, y)), {
+      dW <- I # I is the water irrigation
+      dC <- 0 # There is no growth on those days
+      return( list( c(dW, dC) ) )
+    })
+  }
+  # Else the model runs with the equations
+  else{
+    with(as.list(c(parms, y)),{
+      dW <- (-B * q * W) - (r * C * (1 - ( C/N ) ) * W) * (1/24)
+      dC <- (r * C * (1 - ( C/N ) ) * W) + ( (g*q*C*W)/(C+1)*(W+1) ) - o * C * (1/24)
+      return( list( c(dW, dC) ) )
+    })
+  }
+}
 
 ## Function to create plots
 create.plots <- function(plot.values, ref.data, change.data){
