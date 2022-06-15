@@ -36,8 +36,7 @@ The effects of climate change are an existential threat to the planet earth.
 This paper's purpose is to reproduce and expand on the research done by E Duque-Marin to get a further understanding of the dynamics and different scenarios of fruit tree growth, and by extension shed light on a part of this humongous problem that is already cropping up around the world.
 
 ## Theory
-For use in the simulations, 2 differential equations were obtained from *E Duque-Marín et al 2022 J. Phys.: Conf. Ser. 2153 012018*. Their accompanying parameters are listed below.
-
+For use in the simulations, two differential equations were obtained from *E Duque-Marín et al 2022 J. Phys.: Conf. Ser. 2153 012018*. Their accompanying parameters are listed below.
 
 | **Parameter** | **Meaning**                       |
 |---------------|-----------------------------------|
@@ -67,7 +66,7 @@ This data was plotted using R graphics.
 ## Materials
 The simulation data was obtained using the ODE (ordinary differential equation) function of deSolve.
 This function takes differential equations and parameters and calculates the output of these functions.
-Aforementioned equations can ben found in the theory section.
+Aforementioned equations and parameters can ben found in the theory section.
 Other packages like ggplot2, ggpubr, formatR and scales were used in data visualisation.
 
 | **Software** | **Package** | **Version** |
@@ -90,6 +89,14 @@ The simulation data consists of an index, the $time$, water level in the soil ($
 | 5   | 4.00000    | 0.440001 | 1.09637 |
 
 ## Methods
+The differential equations were translated into a mathematical model that deSolve could understand.
+The last two equations also needed to be incorporated, this was done through if/else statements. After which several tests were run to ensure parity with the described model in the paper. File: [results1](results1.R).
+
+After this, the model was updated to use 1h steps instead of 1 day.
+This lead to the model being adapted to incorporate different growth rates for day and night, for even more precise date. File: [results2](results2.R).
+
+Another few models were made to compare different irrigation intervals, as well as a model to water the soil as soon as almost all water was drained from it. Files: [results3](results3.R) \& [results4](results4.R).
+
 
 
 \newpage
