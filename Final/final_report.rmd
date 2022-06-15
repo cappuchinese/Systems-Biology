@@ -60,6 +60,8 @@ These equations come forth from a plethora of different papers, all of these are
 
 [//]: # (Page : Materials & methods)
 # Materials and Methods
+Since no datasets were used in the production of the results, the simulation data had to be generated.
+This data was plotted using R graphics.
 
 ## Materials
 The simulation data was obtained using the ODE (ordinary differential equation) function of deSolve.
@@ -75,6 +77,16 @@ Other packages like ggplot2, ggpubr, formatR and scales were used in data visual
 |              | ggplot2     | 3.3.5       |
 |              | ggpubr      | 0.4.0       |
 |              | scales      | 1.1.1       |
+
+The simulation data consists of an index, the $time$, water level in the soil ($W$) and biomass ($C$).
+
+|     | **$time$** | **$W$**  | **$C$** |
+|-----|------------|----------|---------|
+| 1   | 0.00000    | 0.600000 | 1.00000 |
+| 2   | 1.00000    | 0.556209 | 1.02602 |
+| 3   | 2.00000    | 0.514991 | 1.05076 |
+| 4   | 3.00000    | 0.476281 | 1.07421 |
+| 5   | 4.00000    | 0.440001 | 1.09637 |
 
 ## Methods
 
