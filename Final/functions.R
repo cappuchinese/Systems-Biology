@@ -91,7 +91,7 @@ create.plots <- function(plot.values, ref.data, change.data){
                         geom_line(data = single.data, aes(color = data.name) ),
                    change.data, data.names ) ) +
     # Labels
-    labs(x = "Time", y = y.val$ylabel, title = y.val$title) +
+    labs(x = "Time", y = y.val$ylabel) +
     theme(legend.position = "bottom") +
     # Line colours
     scale_colour_manual(values = c("black", colours),
@@ -101,9 +101,7 @@ create.plots <- function(plot.values, ref.data, change.data){
   return(plt)
 }
 
-## Function that arranges plots
-arrange.plots <- function(plots, title, common){
-  my.grid <- ggarrange(plotlist = plots, ncol = 2, nrow = length(plots)/2,
-                       common.legend = common, legend = "bottom")
-  print( annotate_figure(my.grid, top = text_grob(title) ) )
-}
+## Labels and titles for according value
+data.values <- data.frame(name = c("W", "C"),
+                          ylabel = c("W(t)", "C(t)"))
+rownames(data.values) <- data.values$name

@@ -25,19 +25,24 @@ time.values <- list("Every 5 days" = 5,
                     "Every 12 days" = 12)
 
 for(i in seq_along(time.values)){
-  parameters$time <- time.values[[i]]
+  parameters$time <- time.values[[i]]  # Set the time value
+  # Run the simulation and store in time.values
   time.values[[i]] <- as.data.frame(ode(times = times, y = state,
                               parms = parameters, func = model, method = "euler"))
 }
 
+## Create the plots
 plts <- lapply(c("W", "C"), create.plots, ref.data, time.values)
 
+## Add the figure annotations
 plot.tags <- c("(a)", "(b)")
-
 for(i in seq_along(plts)){
   plts[[i]] <- plts[[i]] + labs(tag = plot.tags[i])
 }
 
+## Arrange the plots
 my.grid <- ggarrange(plotlist = plts, ncol = 1, nrow = 2,
                      common.legend = FALSE, legend = "bottom")
-print( annotate_figure(my.grid, top = text_grob("Water irrigation on different days") ) )
+## Print the plots with a title
+print( annotate_figure(my.grid,
+                       top = text_grob("Water irrigation on different days") ) )

@@ -20,9 +20,20 @@ times <- seq(0, 120, by = 1/24)
 d.n_data <- as.data.frame(ode(times = times, y = state, parms = parameters,
                               func = day.night_model, method = "euler"))
 
+## Create the plot
 ggplot(d.n_data, mapping = aes(x = time)) +
+       # The different lines
        geom_line(mapping = aes(y = W, color = "Water")) +
-       geom_line(mapping = aes(y = C, color = "Biomass")) +
+       geom_line(mapping = aes(y = C, color = "Biomass day/night")) + # day/night
+       geom_line(mapping = aes(y = C, color = "Reference biomass"),
+                 data = ref.data, linetype = "dashed") + # Default model
+       # Labels
        labs(x = "Time", y = "W(t), C(t)") +
-       scale_colour_manual(values = c("blue", "red"),
-                           limits = c("Water", "Biomass"))
+       # Line colours
+       scale_colour_manual(values = c("blue", "red", "black"),
+                           limits = c("Water", "Biomass day/night",
+                                      "Reference biomass")) +
+       guides(color = guide_legend(title = "",
+                                   override.aes = list(linetype = c(1, 1, 2)))) +
+       # Theme
+       theme(legend.position = "bottom")
