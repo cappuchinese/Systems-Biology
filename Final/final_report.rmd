@@ -4,6 +4,7 @@ output:
     toc: true
     toc_depth: 2
     number_sections: true
+    fig_caption: yes
     includes:
       before_body: title.tex
       in_header: header.tex
@@ -17,8 +18,7 @@ knitr::opts_chunk$set(error = FALSE)
 
 BOSS_MODE <- TRUE
 source('functions.R', local = knitr::knit_global())
-scripts <- c("functions.R", "results1.R", "results2.R")
-invisible(lapply(scripts, knitr::read_chunk))
+knitr::read_chunk('functions.R')
 
 packages <- c("deSolve", "ggplot2", "formatR", "scales", "ggpubr")
 invisible(lapply(packages, library, character.only = T))
@@ -36,7 +36,15 @@ The effects of climate change are an existential threat to planet earth.
 This paper's purpose is to reproduce and expand on the research done by E Duque-Marin to get a further understanding of the dynamics and different scenarios of fruit tree growth, and by extension shed light on a part of this humongous problem that is already cropping up around the world.
 
 ## Theory
-For use in the simulations, two differential equations were obtained from *E Duque-Marín et al 2022 J. Phys.: Conf. Ser. 2153 012018*. Their accompanying parameters are listed below.
+The growth of the fruit tree is highly impacted by the different variables in- and outside the tree. To construct an impulsive model, an order of assumptions must be made:
+
+1. The growth dynamics is governed by an interaction between the variables energy, water, vegetative growth.
+2. The fruit tree responds instantly to the irrigation application.
+3. The model concerned an adult fruit tree (older than 5 years) with a suitable soil surface for the growth of the fruit tree.
+4. Ideal agronomic management conditions.
+5. Optimal environmental conditions: The energy of the system is constant.
+
+The parameters concerning the model are summarized in Table \ref{tab:tab1}.
 
 | **Parameter** | **Meaning**                       |
 |---------------|-----------------------------------|
@@ -48,13 +56,45 @@ For use in the simulations, two differential equations were obtained from *E Duq
 | $\gamma$      | Photosynthetic contribution rate  |
 | $\omega$      | Mortality rate of fruit trees     |
 
-$$Equations:$$
-$$ W'(t) = -\beta qW(t) - rC(t)(1 - \frac{C(t)}{N} W(t) $$
-$$ C'(t) = rC(t)(1 - \frac{C(t)}{N})W(t) + \frac{\gamma qC(t)W(t)}{(C+1)(W+1)}-\omega C(1) \qquad t \ne nT $$
-$$ \Delta W(nT) = I $$
-$$ \Delta C(nT) = 0 \qquad t = nT $$
+Table: Parameters used for the model \label{tab:tab1}
 
-These equations come forth from a plethora of different papers, all of these are listed in *E Duque-Marín et al 2021 J. Phys.: Conf. Ser. 2046 012017*, the paper which proves these equations.
+With that, the state variables can be denoted as following:
+
+1. *E = E(t)* the solar radiation at time *t*;
+2. *W = W(t)* the water amount in the soil at time *t*;
+3. *C = C(t)* the fruit biomass concentration at time *t*.
+
+Under assumption 5, the state variables are reduced to only *W* and *C*.
+The variation of the amount of water in the system is denoted by *W'(t)* and the variation in biomass is denoted by *C'(t)*.
+Considering there is no rainfall (p = 0), the water variation output is due to evapotranspiration at rate $\beta$.
+Besides that, water is crucial for promoting the growth of the fruit tree at rate $r$.
+
+C'(t) corresponds to the water input at a rate $r$; in addition, it is also positively affected due to the water-energy-biomass growth interaction at a rate $\gamma$.
+There is an exit at an $\omega$ rate for the loss of natural death of the crop. This behavior applies to a continuous timescale (long duration), that governs the growth dynamics of the fruit tree.
+However, this model also presents a short timescale (pulse) in discrete time that represents the events in which water enters the system through irrigation supply.
+
+The dynamics between the variables energy, amount of water, and concentration of biomass of the fruit tree are shown in Figure \ref{fig:fig1}, adapted from \ref{ref:ref1};
+where: *E* = Energy; *W* = Water amount; *C* = Fruit biomass concentration; $r$ = Fruit trees intrinsic growth rate; *N* = Fruit carrying capacity; $\beta$ = Evapotranspiration rate;
+$\gamma$ = Photosynthetic contribution rate; $\omega$ = Mortality rate of fruit trees; $p$ = Rainfall rate; *I* = Irrigation amount.\newline
+
+
+```{r, fig.cap = "\\label{fig:fig1}Diagram of dynamics", out.width = "50%", fig.align = "center"}
+knitr::include_graphics("dynamics.png")
+```
+
+
+A model can be proposed that represents the growth dynamics of fruit trees, where the supply of irrigation is evidenced in the form of a pulse, and thus be described by impulsive differential equations \ref{eq:eq1}.
+
+Equations:
+$$
+  \begin{array}{cc}
+  W'(t) = -\beta qW(t) - rC(t)(1 - \frac{C(t)}{N} W(t) & \\
+  C'(t) = rC(t)(1 - \frac{C(t)}{N})W(t) + \frac{\gamma qC(t)W(t)}{(C+1)(W+1)}-\omega C(1) & t \ne nT\\
+  \Delta W(nT) = I & \\
+  \Delta C(nT) = 0 & t = nT\\
+  \end{array}
+$$
+\hfill (\label{eq:eq1}1.2)
 
 \newpage
 
@@ -64,10 +104,10 @@ Since no datasets were used in the production of the results, the simulation dat
 This data was plotted using R graphics.
 
 ## Materials
-The simulation data was obtained using the ODE (ordinary differential equation) function of deSolve.
+The simulation data was obtained using the ODE (ordinary differential equation) function of the deSolve package.
 This function takes differential equations and parameters and calculates the output of these functions.
-Aforementioned equations and parameters can ben found in the theory section.
-Other packages like ggplot2, ggpubr, formatR and scales were used in data visualisation.
+Aforementioned equations can ben found in the theory section.
+Other packages like ggplot2, ggpubr, formatR and scales were used in data visualisation. (\ref{tab:tab2})
 
 | **Software** | **Package** | **Version** |
 |--------------|-------------|-------------|
@@ -78,7 +118,9 @@ Other packages like ggplot2, ggpubr, formatR and scales were used in data visual
 |              | ggpubr      | 0.4.0       |
 |              | scales      | 1.1.1       |
 
-The simulation data consists of an index, the $time$, water level in the soil ($W$) and biomass ($C$).
+Table: Software and packages \label{tab:tab2}
+
+The simulation data consists of an index, the $time$, water level in the soil ($W$) and biomass ($C$). (\ref{tab:tab3})
 
 |     | **$time$** | **$W$**  | **$C$** |
 |-----|------------|----------|---------|
@@ -88,27 +130,38 @@ The simulation data consists of an index, the $time$, water level in the soil ($
 | 4   | 3.00000    | 0.476281 | 1.07421 |
 | 5   | 4.00000    | 0.440001 | 1.09637 |
 
+Table: The simulation data \label{tab:tab3}
+
 ## Methods
 The differential equations were translated into a mathematical model that deSolve could understand.
-The last two equations also needed to be incorporated, this was done through if/else statements. After which several tests were run to ensure parity with the described model in the paper. File: [results1](results1.R).
+The last two equations also needed to be incorporated; this was done through if/else statements checking the timestep.
+After several tests were run to ensure parity with the described model in the paper. See Appendix B. File: [results1](results1.R).
 
-After this, the model was updated to use 1h steps instead of 1 day.
-This lead to the model being adapted to incorporate different growth rates for day and night, for even more precise data. File: [results2](results2.R).
+After this, the model was updated to use one-hour steps instead of one-day steps.
+This lead to the model being adapted to incorporate different growth rates for day and night, for even more precise data.
+See Appendix C. File: [results2](results2.R).
 
-Another few models were made to compare different irrigation intervals, as well as a model for watering the soil as soon as almost all water was drained from it. Files: [results3](results3.R) \& [results4](results4.R).
-
+Another few models were made to compare different irrigation intervals, as well as a model for watering the soil as soon as almost all water was drained from it. See Appendix D and Appendix E. Files: [results3](results3.R) \& [results4](results4.R).
 
 
 \newpage
 
 [//]: # (Page : Results)
 # Results
-```{r res1, file = 'results1.R'}
+## Replication
+The growth of the fruit trees can be shown in multiple simulations, tweaking a few variables to see the differences between these.
+In Figure \ref{fig:fig2}a, the courses of the two state variables are shown: The water amount in the soil (blue) and the growth of the fruit tree's biomass (red).
+Figure \ref{fig:fig2}b shows what happens with the growth of the fruit tree if the parameter *q* changes, for $q = 0.1$ in red, $q = 0.5$ in black (the default value), and $q = 1$ in blue.
+
+```{r res1, file = 'results1.R', fig.cap = "\\label{fig:fig2}The different simulations", fig.height = 7}
 ```
+
 ```{r res2, file = 'results2.R'}
 ```
+
 ```{r res3, file = 'results3.R'}
 ```
+
 ```{r res4, file = 'results4.R'}
 ```
 
