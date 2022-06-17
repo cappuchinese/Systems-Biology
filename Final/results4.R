@@ -1,10 +1,10 @@
 ## ---------------------------
 ##
-## Name: results3.R
+## Name: results4.R
 ##
 ## Author: Lisa Hu
 ##
-## Purpose: Script creates the results for different days of water integretion
+## Purpose: Script adds water to the system when it's 0
 ##
 ## Email: l.j.b.hu@st.hanze.nl
 ##

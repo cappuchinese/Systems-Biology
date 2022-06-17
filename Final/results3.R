@@ -4,7 +4,7 @@
 ##
 ## Author: Lisa Hu
 ##
-## Purpose: Script creates the results for different days of water integretion
+## Purpose: Script creates the results for different days of water irrigation
 ##
 ## Email: l.j.b.hu@st.hanze.nl
 ##
