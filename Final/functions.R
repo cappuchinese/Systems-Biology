@@ -10,7 +10,6 @@
 ##
 ## ---------------------------
 
-## ---- basic-model
 model <- function(t, y, parms){
   # Add water every given days, until day 80
   if(t %% as.numeric(parms["time"]) == 0 && t < 80 && t > 0){
@@ -30,7 +29,6 @@ model <- function(t, y, parms){
   }
 }
 
-## ---- Day-night model
 day.night_model <- function(t, y, parms){
   # Add water every given days, until day 80
   if(t %% as.numeric(parms["time"]) == 0 && t < 80 && t > 0){
@@ -62,7 +60,6 @@ day.night_model <- function(t, y, parms){
   }
 }
 
-## ---- water-model
 water_model <- function(t, y, parms){
   # Add water every given days, until day 80
   with(as.list(c(parms, y)),{

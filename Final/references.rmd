@@ -1,4 +1,2 @@
----
-title: "R Notebook"
-output: pdf
----
+1. E Duque-Marín *et al* 2021 *J. Phys.: Conf. Ser.* 2046 012017 \label{ref:ref1}
+2. E Duque-Marín *et al* 2022 *J. Phys.: Conf. Ser.* 2153 012018 \label{ref:ref2}
