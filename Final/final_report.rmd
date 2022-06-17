@@ -1,6 +1,7 @@
 ---
 output:
   pdf_document:
+    keep_tex:  true
     toc: true
     toc_depth: 2
     number_sections: true
@@ -135,42 +136,67 @@ Table: The simulation data \label{tab:tab3}
 ## Methods
 The differential equations were translated into a mathematical model that deSolve could understand.
 The last two equations also needed to be incorporated; this was done through if/else statements checking the timestep.
-After several tests were run to ensure parity with the described model in the paper. See Appendix B. File: [results1](results1.R).
+After several tests were run to ensure parity with the described model in the paper. See Appendix \ref{appendix-b}
 
 After this, the model was updated to use one-hour steps instead of one-day steps.
 This lead to the model being adapted to incorporate different growth rates for day and night, for even more precise data.
-See Appendix C. File: [results2](results2.R).
+See Appendix \ref{appendix-c}.
 
-Another few models were made to compare different irrigation intervals, as well as a model for watering the soil as soon as almost all water was drained from it. See Appendix D and Appendix E. Files: [results3](results3.R) \& [results4](results4.R).
+Another few models were made to compare different irrigation intervals, as well as a model for watering the soil as soon as almost all water was drained from it. See Appendix \ref{appendix-d} and \ref{appendix-e}.
 
 
 \newpage
 
-[//]: # (Page : Results)
+[//]: # (Page : Results/Resplication)
 # Results
 ## Replication
 The growth of the fruit trees can be shown in multiple simulations, tweaking a few variables to see the differences between these.
 In Figure \ref{fig:fig2}a, the courses of the two state variables are shown: The water amount in the soil (blue) and the growth of the fruit tree's biomass (red).
 Figure \ref{fig:fig2}b shows what happens with the growth of the fruit tree if the parameter *q* changes, for $q = 0.1$ in red, $q = 0.5$ in black (the default value), and $q = 1$ in blue.
 
-```{r res1, file = 'results1.R', fig.cap = "\\label{fig:fig2}The different simulations", fig.height = 7}
+```{r res1, file = 'results1.R', fig.cap = "\\label{fig:fig2}The different simulations", fig.height = 6}
 ```
 
-```{r res2, file = 'results2.R'}
+\newpage
+
+[//]: # (Page : Results/Expansion)
+
+## Expansion
+The following simulations show the difference between the expanded model accounting for day and night cycles in red, and the original model from \ref{ref:ref1} in black.
+Figure \ref{fig:fig3} shows a decrease in overall biomass production, while steady growth is still retained.
+This change has to do with the fact that a little under half of a 24-hour period is calculated as "no growth" night-time.
+
+```{r res2, file = 'results2.R', fig.cap = "\\label{fig:fig3}The expanded simulation", fig.height = 6}
 ```
 
-```{r res3, file = 'results3.R'}
+\newpage
+
+[//]: # (Page : Results/Comparison)
+
+## Comparison
+Comparing different sets of irrigation data is vital to understanding the most efficient way of watering the fruit trees. Figure \ref{fig:fig4} shows the difference between the reference research from the paper and newly run simulations.
+
+```{r res3, file = 'results3.R', fig.cap = "\\label{fig:fig4}The simulation comparisons", fig.height = 7}
 ```
 
-```{r res4, file = 'results4.R'}
-```
+\newpage
 
+[//]: # (Page : Results/Desiccation)
+
+## Desiccation
+
+```{r res4, file = 'results4.R', fig.cap = "\\label{fig:fig5}The edge case simulation", fig.height = 7}
+```
 
 \newpage
 
 [//]: # (Page : Conclusion)
 # Conclusion
-
+In this work, simulations of an impulsive system of nonlinear differential equations were reproduced to describe the growth of fruit trees when exposed the application of water by irrigation.
+These models were then expanded upon to incorporate day/night cycles for the trees to respond to.
+The results of this work not only exhibit the positive effects of a well scheduled irrigation system, but also the negative effects of a system that is not well scheduled.
+Results like these are very important factors in addressing problems that have to do with climate change induced drought.
+All this culminates into the conclusion that artificial irrigation is an essential part of growing fruit trees in areas with frequent drought and decreasing rainfall as an effect of climate change.
 
 \newpage
 
@@ -189,5 +215,5 @@ Figure \ref{fig:fig2}b shows what happens with the growth of the fruit tree if t
 
 [//]: # (Page : Appendix)
 # Appendix
-```{r appendix, child = 'appendix.rmd'}
+```{r appendix, child = 'appendix.rmd', attr.source='.numberLines', echo = TRUE, fig.show='hide'}
 ```
